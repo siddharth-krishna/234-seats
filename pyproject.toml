@@ -14,7 +14,7 @@ dependencies = [
     "sqlalchemy>=2.0",
     "alembic>=1.13",
     "itsdangerous>=2.2",
-    "passlib[bcrypt]>=1.7",
+    "bcrypt>=4.0",
     "python-multipart>=0.0.9",
     "pydantic-settings>=2.3",
     "aiofiles>=24.1",
@@ -51,7 +51,9 @@ select = [
     "ANN", # flake8-annotations
     "RUF", # ruff-specific
 ]
-ignore = []
+ignore = [
+    "B008",  # FastAPI uses Depends()/Form()/Cookie() in function defaults by design
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]

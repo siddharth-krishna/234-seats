@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}234 Seats{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@2.0.3/dist/htmx.min.js"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+
+  <nav class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+    <a href="/" class="font-bold text-lg tracking-tight">234 Seats</a>
+    <div class="flex items-center gap-4 text-sm">
+      {% if current_user %}
+        <span class="text-gray-600">{{ current_user.username }}</span>
+        {% if current_user.is_admin %}
+          <a href="/admin" class="text-indigo-600 hover:underline">Admin</a>
+        {% endif %}
+        <form method="post" action="/logout" class="inline">
+          <button type="submit" class="text-gray-500 hover:text-gray-900">Log out</button>
+        </form>
+      {% else %}
+        <a href="/login" class="text-indigo-600 hover:underline">Log in</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>
