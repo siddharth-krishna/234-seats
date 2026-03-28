@@ -13,9 +13,76 @@
   Constituency {{ constituency.number }} · {{ constituency.district }}
 </p>
 
+<div class="flex flex-col gap-8">
+
+{# ── Candidates ──────────────────────────────────────────────────────────── #}
+<section>
+  <h2 class="text-base font-semibold mb-3">Candidates</h2>
+  <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+
+    {# existing candidates #}
+    {% if constituency.candidates %}
+    <ul class="divide-y divide-gray-100 mb-5">
+      {% for c in constituency.candidates %}
+      <li class="flex items-center justify-between py-2.5">
+        <div class="flex items-center gap-3">
+          {% if c.party %}
+            <span class="inline-block w-2.5 h-2.5 rounded-sm shrink-0"
+                  style="background: {{ c.party.color_hex }}"></span>
+            <span class="font-medium text-sm">{{ c.name }}</span>
+            <span class="text-xs text-gray-400">({{ c.party.abbreviation }})</span>
+          {% else %}
+            <span class="inline-block w-2.5 h-2.5 rounded-sm shrink-0 bg-gray-200"></span>
+            <span class="font-medium text-sm">{{ c.name }}</span>
+            <span class="text-xs text-gray-400">Independent</span>
+          {% endif %}
+        </div>
+        <form method="post"
+              action="/admin/seat/{{ constituency.id }}/candidates/{{ c.id }}/delete">
+          <button type="submit" class="text-xs text-red-400 hover:text-red-600">Remove</button>
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+      <p class="text-sm text-gray-400 mb-5">No candidates yet.</p>
+    {% endif %}
+
+    {# add candidate form #}
+    <form method="post" action="/admin/seat/{{ constituency.id }}/candidates"
+          class="flex flex-wrap items-end gap-3 border-t border-gray-100 pt-4">
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1" for="cand_name">
+          Name <span class="text-red-500">*</span>
+        </label>
+        <input id="cand_name" name="name" type="text" required placeholder="Candidate name"
+               class="rounded-md border border-gray-300 px-3 py-2 text-sm w-52
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-gray-600 mb-1" for="cand_party">Party</label>
+        <select id="cand_party" name="party_id"
+                class="rounded-md border border-gray-300 px-3 py-2 text-sm
+                       focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Independent / Unknown</option>
+          {% for p in parties %}
+            <option value="{{ p.id }}">{{ p.name }} ({{ p.abbreviation }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit"
+              class="rounded-md bg-indigo-600 hover:bg-indigo-700 text-white
+                     font-medium px-4 py-2 text-sm transition-colors">
+        Add candidate
+      </button>
+    </form>
+  </div>
+</section>
+
+{# ── Result entry + Writeup side by side ─────────────────────────────────── #}
 <div class="grid md:grid-cols-2 gap-8">
 
-  {# ── Result entry ──────────────────────────────────────────────────────── #}
+  {# ── Result entry ────────────────────────────────────────────────────── #}
   <section>
     <h2 class="text-base font-semibold mb-3">
       {{ "Edit result" if constituency.result else "Enter result" }}
@@ -33,18 +100,57 @@
       </div>
       {% endif %}
 
+      {% set candidates = constituency.candidates %}
+
       <div>
-        <label class="block text-sm font-medium mb-1" for="winner_name">Winner name <span class="text-red-500">*</span></label>
-        <input id="winner_name" name="winner_name" type="text" required
-               value="{{ constituency.result.winner_name if constituency.result else '' }}"
-               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <label class="block text-sm font-medium mb-1" for="winner_name">
+          Winner <span class="text-red-500">*</span>
+        </label>
+        {% if candidates %}
+          {# Dropdown with auto-fill for party #}
+          <select id="winner_name" name="winner_name" required
+                  onchange="autoFillParty(this)"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Select winner…</option>
+            {% for c in candidates %}
+              <option value="{{ c.name }}"
+                      data-party="{{ c.party.name if c.party else '' }}"
+                      {{ 'selected' if constituency.result and constituency.result.winner_name == c.name }}>
+                {{ c.name }}{% if c.party %} ({{ c.party.abbreviation }}){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <input id="winner_name" name="winner_name" type="text" required
+                 value="{{ constituency.result.winner_name if constituency.result else '' }}"
+                 class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        {% endif %}
       </div>
 
       <div>
-        <label class="block text-sm font-medium mb-1" for="winner_party">Winning party <span class="text-red-500">*</span></label>
-        <input id="winner_party" name="winner_party" type="text" required
-               value="{{ constituency.result.winner_party if constituency.result else '' }}"
-               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        <label class="block text-sm font-medium mb-1" for="winner_party">
+          Winning party <span class="text-red-500">*</span>
+        </label>
+        {% if candidates %}
+          <select id="winner_party" name="winner_party" required
+                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="">Select party…</option>
+            {% for p in parties %}
+              <option value="{{ p.name }}"
+                      {{ 'selected' if constituency.result and constituency.result.winner_party == p.name }}>
+                {{ p.name }}
+              </option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <input id="winner_party" name="winner_party" type="text" required
+                 value="{{ constituency.result.winner_party if constituency.result else '' }}"
+                 class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                        focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        {% endif %}
       </div>
 
       <div>
@@ -54,17 +160,19 @@
         <input id="winner_vote_share" name="winner_vote_share" type="number"
                min="0" max="100" step="0.1"
                value="{{ '%.1f'|format(constituency.result.winner_vote_share) if constituency.result and constituency.result.winner_vote_share is not none else '' }}"
-               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
 
       <button type="submit"
-              class="self-start rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 text-sm transition-colors">
+              class="self-start rounded-md bg-indigo-600 hover:bg-indigo-700 text-white
+                     font-medium px-5 py-2 text-sm transition-colors">
         Save result
       </button>
     </form>
   </section>
 
-  {# ── Writeup editing ───────────────────────────────────────────────────── #}
+  {# ── Writeup editing ─────────────────────────────────────────────────── #}
   <section>
     <h2 class="text-base font-semibold mb-3">Writeup</h2>
     <form method="post" action="/admin/seat/{{ constituency.id }}/writeup"
@@ -76,14 +184,29 @@
         </label>
         <textarea id="writeup" name="writeup" rows="10"
                   placeholder="History of the seat, key candidates, notable issues…"
-                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ constituency.writeup or "" }}</textarea>
+                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono
+                         focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ constituency.writeup or "" }}</textarea>
       </div>
       <button type="submit"
-              class="self-start rounded-md bg-gray-800 hover:bg-gray-900 text-white font-medium px-5 py-2 text-sm transition-colors">
+              class="self-start rounded-md bg-gray-800 hover:bg-gray-900 text-white
+                     font-medium px-5 py-2 text-sm transition-colors">
         Save writeup
       </button>
     </form>
   </section>
 
 </div>
+</div>
+
+<script>
+  // When admin picks a candidate from the winner dropdown, auto-select their party.
+  function autoFillParty(select) {
+    const partyName = select.options[select.selectedIndex].dataset.party;
+    const partySelect = document.getElementById("winner_party");
+    if (!partySelect || !partyName) return;
+    for (const opt of partySelect.options) {
+      if (opt.value === partyName) { opt.selected = true; return; }
+    }
+  }
+</script>
 {% endblock %}

@@ -51,6 +51,9 @@ class Constituency(Base):
     result: Mapped["Result | None"] = relationship(  # type: ignore[name-defined]  # noqa: F821
         back_populates="constituency", uselist=False, cascade="all, delete-orphan"
     )
+    candidates: Mapped[list["Candidate"]] = relationship(  # type: ignore[name-defined]  # noqa: F821
+        back_populates="constituency", cascade="all, delete-orphan", order_by="Candidate.name"
+    )
 
     def __repr__(self) -> str:
         return f"<Constituency id={self.id} name={self.name!r}>"

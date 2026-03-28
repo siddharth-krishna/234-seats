@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import require_admin
+from app.models.candidate import Candidate
 from app.models.constituency import Constituency, Party
 from app.models.election import Election
 from app.models.result import Result
@@ -67,10 +68,11 @@ def admin_seat(
 ) -> HTMLResponse:
     """Per-seat admin page: edit writeup and enter result."""
     constituency = _get_constituency_or_404(db, constituency_id)
+    parties = db.query(Party).order_by(Party.name).all()
     return templates.TemplateResponse(
         request,
         "admin/seat.html",
-        {"current_user": current_user, "constituency": constituency},
+        {"current_user": current_user, "constituency": constituency, "parties": parties},
     )
 
 
@@ -260,3 +262,48 @@ def delete_party(
     db.delete(party)
     db.commit()
     return RedirectResponse(url="/admin/parties", status_code=status.HTTP_302_FOUND)
+
+
+# ── Candidate management ───────────────────────────────────────────────────────
+
+
+@router.post("/seat/{constituency_id}/candidates")
+def add_candidate(
+    constituency_id: int,
+    name: str = Form(...),
+    party_id: str = Form(default=""),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> RedirectResponse:
+    """Add a candidate to a constituency."""
+    _get_constituency_or_404(db, constituency_id)
+    resolved_party_id: int | None = int(party_id) if party_id.strip() else None
+    db.add(
+        Candidate(
+            constituency_id=constituency_id,
+            name=name.strip(),
+            party_id=resolved_party_id,
+        )
+    )
+    db.commit()
+    return RedirectResponse(
+        url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND
+    )
+
+
+@router.post("/seat/{constituency_id}/candidates/{candidate_id}/delete")
+def delete_candidate(
+    constituency_id: int,
+    candidate_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> RedirectResponse:
+    """Remove a candidate from a constituency."""
+    candidate = db.get(Candidate, candidate_id)
+    if candidate is None or candidate.constituency_id != constituency_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    db.delete(candidate)
+    db.commit()
+    return RedirectResponse(
+        url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND
+    )

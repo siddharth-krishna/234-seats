@@ -15,11 +15,25 @@
     <label class="block text-sm font-medium mb-1" for="predicted_winner">
       Predicted winner <span class="text-red-500">*</span>
     </label>
-    <input
-      id="predicted_winner" name="predicted_winner" type="text"
-      required placeholder="Candidate name"
-      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-    />
+    {% if candidates %}
+      <select id="predicted_winner" name="predicted_winner" required
+              class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                     focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <option value="">Select candidate…</option>
+        {% for c in candidates %}
+          <option value="{{ c.name }}">
+            {{ c.name }}{% if c.party %} — {{ c.party.abbreviation }}{% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    {% else %}
+      <input
+        id="predicted_winner" name="predicted_winner" type="text"
+        required placeholder="Candidate name"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+               focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      />
+    {% endif %}
   </div>
 
   <div>

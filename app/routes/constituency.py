@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import require_login
+from app.models.candidate import Candidate
 from app.models.constituency import Constituency
 from app.models.prediction import Prediction
 from app.models.user import User
@@ -44,12 +45,19 @@ def _build_context(
         if show_predictions
         else []
     )
+    candidates = (
+        db.query(Candidate)
+        .filter_by(constituency_id=constituency.id)
+        .order_by(Candidate.name)
+        .all()
+    )
     return {
         "current_user": current_user,
         "constituency": constituency,
         "user_prediction": user_prediction,
         "show_predictions": show_predictions,
         "predictions": all_predictions,
+        "candidates": candidates,
     }
 
 
