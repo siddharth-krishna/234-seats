@@ -1,10 +1,69 @@
 # 234 Seats
 
-A simple website for predicting election results and ranking users based on their accuracy or other metrics. Developed for the Tamil Nadu legislative assembly elections in April-May 2026, hence the name 234 seats.
+A web app for predicting Tamil Nadu legislative assembly election results and comparing predictions with friends. Built for the April–May 2026 elections — 234 constituencies, one winner per seat.
 
-This is a personal project for educational purposes.
+Users submit a predicted winner, vote share, and comment for each constituency. After results are declared, a leaderboard ranks everyone by accuracy (correct seats, vote-share MAE/RMSE). Hosted on PythonAnywhere.
 
-## Feature Wishlist
+## Getting Started
+
+**Prerequisites:** Python 3.12+, [`just`](https://github.com/casey/just)
+
+```bash
+git clone <repo-url>
+cd 234-seats
+
+# Create a virtual environment and install all dependencies
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+
+# Install pre-commit hooks
+just setup
+
+# Configure environment
+cp .env.example .env             # edit SECRET_KEY at minimum
+
+# Set up the database
+just migrate                     # create tables
+just seed                        # load sample constituency data
+
+# Start the dev server
+just dev                         # http://localhost:8000
+
+# Create a user to log in with
+python scripts/create_users.py alice mypassword
+python scripts/create_users.py admin mypassword --admin
+```
+
+Other useful commands:
+
+```bash
+just test      # run the test suite
+just lint      # ruff check + format check
+just fix       # auto-fix lint issues
+```
+
+## Features
+
+- Session-based login/logout (admin-created accounts, no self-registration)
+- Constituency pages with prediction form (winner, vote share %, comment)
+- Predictions from other users are hidden until you submit your own
+- Leaderboard: correct seats, vote-share deviation (MAE, RMSE), sortable by column
+- Admin: open/close predictions per seat, enter final results, publish writeups
+- All election data scoped to an election object — reusable for future elections
+
+## Wishlist
+
+- Home page map of all 234 constituencies, colour-coded by prediction status; clickable
+- Links to Harsh's blog posts and per-seat analysis
+- Edit your prediction after submission (before predictions close)
+- Scrape live results from ECI during results day
+- Graph of leaderboard standings over time
+- Export predictions and results as CSV/spreadsheet
+- User badges and titles based on accuracy
+- Archive a completed election; start fresh for the next one
+
+## Original Prompt
 
 - Home page shows a map of all the constituencies, a subset of which are clickable, and a table of users and overall metrics
     - clicking on a constituency takes you to the constituency page
@@ -32,3 +91,16 @@ This is a personal project for educational purposes.
 - Stretch: Export results, predictions as CSV/spreadsheet
 - Stretch: labels/badges/titles for each user based on wins / other honorable mentions
 - After elections: add functionality to archive this election and use website again for a new one. This means the architecture of the website / database should be designed so that everything is tied to a particular election, so that it can be reused for the next election.
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | FastAPI + Jinja2 templates + HTMX |
+| Styling | Tailwind CSS (CDN) |
+| Database | SQLite via SQLAlchemy 2 + Alembic |
+| Auth | itsdangerous signed cookies + bcrypt |
+| Hosting | PythonAnywhere |
+| Tooling | ruff, ty, pytest, pre-commit, just |
+
+See [`PLAN.md`](PLAN.md) for full architecture and implementation roadmap.
