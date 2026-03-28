@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Parties — Admin — 234 Seats{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Parties</h1>
+  <a href="/admin" class="text-sm text-indigo-600 hover:underline">← Admin</a>
+</div>
+
+{# ── Add party form ────────────────────────────────────────────────────────── #}
+<section class="mb-10">
+  <h2 class="text-base font-semibold mb-3">Add party</h2>
+  <form method="post" action="/admin/parties"
+        class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex flex-wrap items-end gap-4">
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1" for="new_name">Name <span class="text-red-500">*</span></label>
+      <input id="new_name" name="name" type="text" required placeholder="Dravida Munnetra Kazhagam"
+             class="rounded-md border border-gray-300 px-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1" for="new_abbr">Abbreviation <span class="text-red-500">*</span></label>
+      <input id="new_abbr" name="abbreviation" type="text" required placeholder="DMK" maxlength="20"
+             class="rounded-md border border-gray-300 px-3 py-2 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1" for="new_color">Colour</label>
+      <div class="flex items-center gap-2">
+        <input id="new_color" name="color_hex" type="color" value="#cccccc"
+               class="h-9 w-14 rounded border border-gray-300 cursor-pointer p-0.5" />
+        <span class="text-xs text-gray-400">hex</span>
+      </div>
+    </div>
+    <button type="submit"
+            class="rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 text-sm transition-colors">
+      Add
+    </button>
+  </form>
+</section>
+
+{# ── Party list ────────────────────────────────────────────────────────────── #}
+<section>
+  <h2 class="text-base font-semibold mb-3">
+    All parties <span class="text-gray-400 font-normal text-sm">({{ parties | length }})</span>
+  </h2>
+
+  {% if parties %}
+  <div class="flex flex-col gap-3">
+    {% for p in parties %}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+      <form method="post" action="/admin/parties/{{ p.id }}"
+            class="flex flex-wrap items-end gap-4">
+
+        <div class="flex items-center gap-2 mr-2">
+          <div class="w-4 h-4 rounded-sm shrink-0" style="background: {{ p.color_hex }}"></div>
+          <span class="text-xs text-gray-400 font-mono">{{ p.color_hex }}</span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Name</label>
+          <input name="name" type="text" required value="{{ p.name }}"
+                 class="rounded-md border border-gray-300 px-3 py-2 text-sm w-56 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Abbreviation</label>
+          <input name="abbreviation" type="text" required value="{{ p.abbreviation }}" maxlength="20"
+                 class="rounded-md border border-gray-300 px-3 py-2 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Colour</label>
+          <input name="color_hex" type="color" value="{{ p.color_hex }}"
+                 class="h-9 w-14 rounded border border-gray-300 cursor-pointer p-0.5" />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button type="submit"
+                  class="rounded-md bg-gray-800 hover:bg-gray-900 text-white font-medium px-4 py-2 text-sm transition-colors">
+            Save
+          </button>
+        </div>
+      </form>
+
+      <form method="post" action="/admin/parties/{{ p.id }}/delete" class="mt-3"
+            onsubmit="return confirm('Delete {{ p.name }}? Constituencies using this party will lose their current party.')">
+        <button type="submit" class="text-xs text-red-500 hover:text-red-700 hover:underline">
+          Delete
+        </button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p class="text-sm text-gray-400">No parties yet. Add one above.</p>
+  {% endif %}
+</section>
+{% endblock %}

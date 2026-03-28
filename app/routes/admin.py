@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import require_admin
-from app.models.constituency import Constituency
+from app.models.constituency import Constituency, Party
 from app.models.election import Election
 from app.models.result import Result
 from app.models.user import User
@@ -185,3 +185,78 @@ def activate_election(
     election.active = True
     db.commit()
     return RedirectResponse(url="/admin", status_code=status.HTTP_302_FOUND)
+
+
+# ── Party management ───────────────────────────────────────────────────────────
+
+
+@router.get("/parties", response_class=HTMLResponse)
+def parties_page(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin),
+) -> HTMLResponse:
+    """List all parties with edit and delete controls."""
+    parties = db.query(Party).order_by(Party.name).all()
+    return templates.TemplateResponse(
+        request,
+        "admin/parties.html",
+        {"current_user": current_user, "parties": parties},
+    )
+
+
+@router.post("/parties")
+def create_party(
+    name: str = Form(...),
+    abbreviation: str = Form(...),
+    color_hex: str = Form(default="#cccccc"),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> RedirectResponse:
+    """Create a new party."""
+    if db.query(Party).filter_by(name=name.strip()).first():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail="Party name already exists"
+        )
+    db.add(Party(name=name.strip(), abbreviation=abbreviation.strip(), color_hex=color_hex))
+    db.commit()
+    return RedirectResponse(url="/admin/parties", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/parties/{party_id}")
+def update_party(
+    party_id: int,
+    name: str = Form(...),
+    abbreviation: str = Form(...),
+    color_hex: str = Form(default="#cccccc"),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> RedirectResponse:
+    """Update an existing party."""
+    party = db.get(Party, party_id)
+    if party is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    party.name = name.strip()
+    party.abbreviation = abbreviation.strip()
+    party.color_hex = color_hex
+    db.commit()
+    return RedirectResponse(url="/admin/parties", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/parties/{party_id}/delete")
+def delete_party(
+    party_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> RedirectResponse:
+    """Delete a party. Constituencies using this party lose their current_party."""
+    party = db.get(Party, party_id)
+    if party is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    # Null out FK references before deleting
+    db.query(Constituency).filter_by(current_party_id=party_id).update(
+        {"current_party_id": None}
+    )
+    db.delete(party)
+    db.commit()
+    return RedirectResponse(url="/admin/parties", status_code=status.HTTP_302_FOUND)
