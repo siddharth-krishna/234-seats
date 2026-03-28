@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Admin — 234 Seats{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Admin</h1>
+  <a href="/" class="text-sm text-indigo-600 hover:underline">← Home</a>
+</div>
+
+{# ── Active election ───────────────────────────────────────────────────────── #}
+<section class="mb-8">
+  <h2 class="text-base font-semibold mb-3">Elections</h2>
+  {% if elections %}
+  <div class="flex flex-wrap gap-3">
+    {% for e in elections %}
+    <div class="flex items-center gap-3 rounded-lg border px-4 py-2
+      {{ 'border-indigo-300 bg-indigo-50' if e.active else 'border-gray-200 bg-white' }}">
+      <span class="font-medium text-sm">{{ e.name }}</span>
+      {% if e.active %}
+        <span class="text-xs text-indigo-600 font-medium">Active</span>
+      {% else %}
+        <form method="post" action="/admin/election/{{ e.id }}/activate">
+          <button class="text-xs text-gray-500 hover:text-indigo-600">Set active</button>
+        </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p class="text-sm text-gray-400">No elections. Run <code class="text-xs bg-gray-100 px-1 rounded">just seed</code> to create one.</p>
+  {% endif %}
+</section>
+
+{# ── Constituency table ────────────────────────────────────────────────────── #}
+<section>
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-base font-semibold">
+      Constituencies
+      {% if active_election %}<span class="text-gray-400 font-normal text-sm">— {{ active_election.name }}</span>{% endif %}
+    </h2>
+    {% if constituencies %}
+    <span class="text-xs text-gray-400">{{ constituencies | length }} total ·
+      {{ constituencies | selectattr("predictions_open") | list | length }} open ·
+      {{ constituencies | selectattr("result") | list | length }} with results
+    </span>
+    {% endif %}
+  </div>
+
+  {% if constituencies %}
+  <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 uppercase text-xs tracking-wide">
+        <tr>
+          <th class="px-3 py-2 text-left w-10">#</th>
+          <th class="px-3 py-2 text-left">Name</th>
+          <th class="px-3 py-2 text-left">District</th>
+          <th class="px-3 py-2 text-left">Predictions</th>
+          <th class="px-3 py-2 text-left">Result</th>
+          <th class="px-3 py-2 text-left">Actions</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for c in constituencies %}
+          {% include "admin/_seat_row.html" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif active_election %}
+    <p class="text-sm text-gray-400">No constituencies loaded. Run <code class="text-xs bg-gray-100 px-1 rounded">just seed</code>.</p>
+  {% endif %}
+</section>
+{% endblock %}

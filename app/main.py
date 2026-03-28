@@ -2,12 +2,13 @@
 
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
+from app.routes import admin as admin_router
 from app.routes import auth as auth_router
 from app.routes import constituency as constituency_router
 from app.routes import home as home_router
@@ -32,12 +33,13 @@ def create_app() -> FastAPI:
     # Redirect unauthenticated browser requests to the login page
     @application.exception_handler(401)
     async def _on_401(_request: Request, _exc: HTTPException) -> RedirectResponse:
-        return RedirectResponse(url="/login")
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
 
     # Routers
     application.include_router(auth_router.router)
     application.include_router(home_router.router)
     application.include_router(constituency_router.router)
+    application.include_router(admin_router.router)
 
     return application
 

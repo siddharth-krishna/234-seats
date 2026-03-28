@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}Admin: {{ constituency.name }} — 234 Seats{% endblock %}
+
+{% block content %}
+<div class="mb-4 flex items-center gap-3">
+  <a href="/admin" class="text-sm text-indigo-600 hover:underline">← Admin</a>
+  <a href="/seat/{{ constituency.id }}" class="text-sm text-gray-400 hover:underline">View public page</a>
+</div>
+
+<h1 class="text-2xl font-bold mb-1">{{ constituency.name }}</h1>
+<p class="text-gray-500 text-sm mb-8">
+  Constituency {{ constituency.number }} · {{ constituency.district }}
+</p>
+
+<div class="grid md:grid-cols-2 gap-8">
+
+  {# ── Result entry ──────────────────────────────────────────────────────── #}
+  <section>
+    <h2 class="text-base font-semibold mb-3">
+      {{ "Edit result" if constituency.result else "Enter result" }}
+    </h2>
+    <form method="post" action="/admin/seat/{{ constituency.id }}/result"
+          class="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4 shadow-sm">
+
+      {% if constituency.result %}
+      <div class="rounded-lg bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-800">
+        Current: <strong>{{ constituency.result.winner_name }}</strong>
+        ({{ constituency.result.winner_party }})
+        {% if constituency.result.winner_vote_share is not none %}
+          · {{ "%.1f"|format(constituency.result.winner_vote_share) }}%
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div>
+        <label class="block text-sm font-medium mb-1" for="winner_name">Winner name <span class="text-red-500">*</span></label>
+        <input id="winner_name" name="winner_name" type="text" required
+               value="{{ constituency.result.winner_name if constituency.result else '' }}"
+               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1" for="winner_party">Winning party <span class="text-red-500">*</span></label>
+        <input id="winner_party" name="winner_party" type="text" required
+               value="{{ constituency.result.winner_party if constituency.result else '' }}"
+               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1" for="winner_vote_share">
+          Vote share <span class="text-gray-400 font-normal">(%, optional)</span>
+        </label>
+        <input id="winner_vote_share" name="winner_vote_share" type="number"
+               min="0" max="100" step="0.1"
+               value="{{ '%.1f'|format(constituency.result.winner_vote_share) if constituency.result and constituency.result.winner_vote_share is not none else '' }}"
+               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+
+      <button type="submit"
+              class="self-start rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 text-sm transition-colors">
+        Save result
+      </button>
+    </form>
+  </section>
+
+  {# ── Writeup editing ───────────────────────────────────────────────────── #}
+  <section>
+    <h2 class="text-base font-semibold mb-3">Writeup</h2>
+    <form method="post" action="/admin/seat/{{ constituency.id }}/writeup"
+          class="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4 shadow-sm">
+      <div>
+        <label class="block text-sm font-medium mb-1" for="writeup">
+          Background and context
+          <span class="text-gray-400 font-normal">(shown on the constituency page)</span>
+        </label>
+        <textarea id="writeup" name="writeup" rows="10"
+                  placeholder="History of the seat, key candidates, notable issues…"
+                  class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ constituency.writeup or "" }}</textarea>
+      </div>
+      <button type="submit"
+              class="self-start rounded-md bg-gray-800 hover:bg-gray-900 text-white font-medium px-5 py-2 text-sm transition-colors">
+        Save writeup
+      </button>
+    </form>
+  </section>
+
+</div>
+{% endblock %}
