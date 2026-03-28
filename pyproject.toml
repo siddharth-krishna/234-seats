@@ -35,6 +35,7 @@ dev = [
 [tool.ruff]
 target-version = "py312"
 line-length = 100
+exclude = ["migrations/versions/"]
 
 [tool.ruff.lint]
 select = [
