@@ -6,7 +6,7 @@ Reads three CSV files from data/:
   data/candidates_provisional.csv — provisional candidates from Wikipedia
 
 Usage:
-    python scripts/seed_constituencies.py [--election-id N]
+    python scripts/seed_database.py [--election-id N]
 
 The script is idempotent: re-running it will not create duplicates.
 """
