@@ -58,28 +58,38 @@ just fix       # auto-fix lint issues
    pip install -r ~/234-seats/requirements.txt
    ```
 
-3. Run migrations:
+3. Create a `.env` file with your secrets (never commit this):
+   ```bash
+   cat > ~/234-seats/.env <<'EOF'
+   export SECRET_KEY=<long random string>
+   export DEBUG=False
+   export DATABASE_URL=sqlite:////home/<you>/234-seats/db.sqlite3
+   EOF
+   ```
+
+4. So that `alembic` and scripts pick up those variables in the Bash console,
+   add a line to your virtualenv's postactivate script:
+   ```bash
+   echo 'set -a; source ~/234-seats/.env; set +a' >> ~/.virtualenvs/234-seats/bin/postactivate
+   ```
+   Then reload the virtualenv: `workon 234-seats`
+
+5. Run migrations:
    ```bash
    cd ~/234-seats && alembic upgrade head
    ```
 
-4. **Web tab → Add new web app → Manual configuration (Python 3.12)**
+6. **Web tab → Add new web app → Manual configuration (Python 3.12)**
    - Source directory: `/home/<you>/234-seats`
    - Virtualenv: `/home/<you>/.virtualenvs/234-seats`
-   - WSGI file: replace its contents with a single line:
+   - WSGI file: replace its entire contents with:
      ```python
+     import sys
+     sys.path.insert(0, '/home/<you>/234-seats')
      from wsgi import application
      ```
-     then set the working directory at the top to `/home/<you>/234-seats`
 
-5. **Web tab → Environment variables:**
-   ```
-   SECRET_KEY=<long random string>
-   DEBUG=False
-   DATABASE_URL=sqlite:////home/<you>/234-seats/db.sqlite3
-   ```
-
-6. Click **Reload**. App is live at `<you>.pythonanywhere.com`.
+7. Click **Reload**. App is live at `<you>.pythonanywhere.com`.
 
 ### Redeploying after changes
 
