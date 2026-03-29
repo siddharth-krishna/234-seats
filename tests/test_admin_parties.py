@@ -34,17 +34,13 @@ def auth(client: TestClient, user: User) -> TestClient:
 # ── Access control ─────────────────────────────────────────────────────────────
 
 
-def test_parties_page_requires_admin(
-    client: TestClient, regular_user: User, db: Session
-) -> None:
+def test_parties_page_requires_admin(client: TestClient, regular_user: User, db: Session) -> None:
     db.commit()
     auth(client, regular_user)
     assert client.get("/admin/parties").status_code == 403
 
 
-def test_parties_page_accessible_to_admin(
-    client: TestClient, admin: User, db: Session
-) -> None:
+def test_parties_page_accessible_to_admin(client: TestClient, admin: User, db: Session) -> None:
     db.commit()
     auth(client, admin)
     assert client.get("/admin/parties").status_code == 200
@@ -66,9 +62,7 @@ def test_create_party(client: TestClient, admin: User, db: Session) -> None:
     assert party.color_hex == "#e63946"
 
 
-def test_create_duplicate_party_returns_409(
-    client: TestClient, admin: User, db: Session
-) -> None:
+def test_create_duplicate_party_returns_409(client: TestClient, admin: User, db: Session) -> None:
     db.add(Party(name="DMK", abbreviation="DMK"))
     db.commit()
     auth(client, admin)
@@ -94,9 +88,7 @@ def test_update_party(client: TestClient, admin: User, db: Session) -> None:
     assert party.color_hex == "#e63946"
 
 
-def test_update_party_name_and_abbreviation(
-    client: TestClient, admin: User, db: Session
-) -> None:
+def test_update_party_name_and_abbreviation(client: TestClient, admin: User, db: Session) -> None:
     party = Party(name="Old Name", abbreviation="OLD")
     db.add(party)
     db.commit()
@@ -110,15 +102,16 @@ def test_update_party_name_and_abbreviation(
     assert party.abbreviation == "NEW"
 
 
-def test_update_nonexistent_party_returns_404(
-    client: TestClient, admin: User, db: Session
-) -> None:
+def test_update_nonexistent_party_returns_404(client: TestClient, admin: User, db: Session) -> None:
     db.commit()
     auth(client, admin)
-    assert client.post(
-        "/admin/parties/9999",
-        data={"name": "X", "abbreviation": "X", "color_hex": "#000"},
-    ).status_code == 404
+    assert (
+        client.post(
+            "/admin/parties/9999",
+            data={"name": "X", "abbreviation": "X", "color_hex": "#000"},
+        ).status_code
+        == 404
+    )
 
 
 # ── Delete ─────────────────────────────────────────────────────────────────────
@@ -134,9 +127,7 @@ def test_delete_party(client: TestClient, admin: User, db: Session) -> None:
     assert db.get(Party, party.id) is None
 
 
-def test_delete_party_nulls_constituency_fk(
-    client: TestClient, admin: User, db: Session
-) -> None:
+def test_delete_party_nulls_constituency_fk(client: TestClient, admin: User, db: Session) -> None:
     """Deleting a party removes the FK reference from constituencies."""
     party = Party(name="DMK", abbreviation="DMK")
     election = Election(name="TN 2026", year=2026, active=True)
@@ -157,9 +148,7 @@ def test_delete_party_nulls_constituency_fk(
     assert seat.current_party_id is None
 
 
-def test_delete_nonexistent_party_returns_404(
-    client: TestClient, admin: User, db: Session
-) -> None:
+def test_delete_nonexistent_party_returns_404(client: TestClient, admin: User, db: Session) -> None:
     db.commit()
     auth(client, admin)
     assert client.post("/admin/parties/9999/delete").status_code == 404

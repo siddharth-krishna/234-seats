@@ -50,6 +50,11 @@ new-migration msg:
 seed:
     python scripts/seed_constituencies.py
 
+# Drop and recreate the database from scratch (dev only)
+reset-db:
+    rm -f 234seats.db
+    alembic upgrade head
+
 # Create a user (usage: just create-user username password [--admin])
 create-user *args:
     python scripts/create_users.py {{args}}

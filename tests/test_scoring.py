@@ -116,20 +116,22 @@ def test_vote_share_mae_rmse(
     # errors: +2, -4  → MAE = 3.0, RMSE = sqrt((4+16)/2) = sqrt(10)
     add_result(db, seats[0], "A", 40.0)
     add_result(db, seats[1], "B", 50.0)
-    db.add_all([
-        Prediction(
-            user_id=users[0].id,
-            constituency_id=seats[0].id,
-            predicted_winner="A",
-            predicted_vote_share=42.0,
-        ),
-        Prediction(
-            user_id=users[0].id,
-            constituency_id=seats[1].id,
-            predicted_winner="B",
-            predicted_vote_share=46.0,
-        ),
-    ])
+    db.add_all(
+        [
+            Prediction(
+                user_id=users[0].id,
+                constituency_id=seats[0].id,
+                predicted_winner="A",
+                predicted_vote_share=42.0,
+            ),
+            Prediction(
+                user_id=users[0].id,
+                constituency_id=seats[1].id,
+                predicted_winner="B",
+                predicted_vote_share=46.0,
+            ),
+        ]
+    )
     db.commit()
 
     scores = {s.username: s for s in compute_scores(db, election.id)}

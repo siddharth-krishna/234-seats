@@ -1,6 +1,7 @@
 """Admin routes: seat management, result entry, writeup editing."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -37,10 +38,7 @@ def admin_dashboard(
     elections = db.query(Election).order_by(Election.year.desc()).all()
     active = next((e for e in elections if e.active), None)
     constituencies = (
-        db.query(Constituency)
-        .filter_by(election_id=active.id)
-        .order_by(Constituency.number)
-        .all()
+        db.query(Constituency).filter_by(election_id=active.id).order_by(Constituency.number).all()
         if active
         else []
     )
@@ -91,9 +89,7 @@ def open_predictions(
     c.predictions_open = True
     db.commit()
     if request.headers.get("HX-Request"):
-        return templates.TemplateResponse(
-            request, "admin/_seat_row.html", {"c": c}
-        )
+        return templates.TemplateResponse(request, "admin/_seat_row.html", {"c": c})
     return RedirectResponse(url="/admin", status_code=status.HTTP_302_FOUND)
 
 
@@ -109,9 +105,7 @@ def close_predictions(
     c.predictions_open = False
     db.commit()
     if request.headers.get("HX-Request"):
-        return templates.TemplateResponse(
-            request, "admin/_seat_row.html", {"c": c}
-        )
+        return templates.TemplateResponse(request, "admin/_seat_row.html", {"c": c})
     return RedirectResponse(url="/admin", status_code=status.HTTP_302_FOUND)
 
 
@@ -146,9 +140,7 @@ def enter_result(
     result.winner_party = winner_party.strip()
     result.winner_vote_share = winner_vote_share
     db.commit()
-    return RedirectResponse(
-        url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND
-    )
+    return RedirectResponse(url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND)
 
 
 # ── Writeup editing ────────────────────────────────────────────────────────────
@@ -167,13 +159,13 @@ def save_writeup(
     c.writeup = writeup.strip() or None
     db.commit()
     if request.headers.get("HX-Request"):
-        saved_at = datetime.now(tz=timezone.utc).strftime("%H:%M")
-        return HTMLResponse(
-            content=f'<span id="writeup-status" class="text-sm text-green-700">Saved at {saved_at} UTC</span>'
+        saved_at = datetime.now(tz=UTC).strftime("%H:%M")
+        snippet = (
+            f'<span id="writeup-status" class="text-sm text-green-700">'
+            f"Saved at {saved_at} UTC</span>"
         )
-    return RedirectResponse(
-        url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND
-    )
+        return HTMLResponse(content=snippet)
+    return RedirectResponse(url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND)
 
 
 # ── Election activation ────────────────────────────────────────────────────────
@@ -262,9 +254,7 @@ def delete_party(
     if party is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     # Null out FK references before deleting
-    db.query(Constituency).filter_by(current_party_id=party_id).update(
-        {"current_party_id": None}
-    )
+    db.query(Constituency).filter_by(current_party_id=party_id).update({"current_party_id": None})
     db.delete(party)
     db.commit()
     return RedirectResponse(url="/admin/parties", status_code=status.HTTP_302_FOUND)
@@ -292,9 +282,7 @@ def add_candidate(
         )
     )
     db.commit()
-    return RedirectResponse(
-        url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND
-    )
+    return RedirectResponse(url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND)
 
 
 @router.post("/seat/{constituency_id}/candidates/{candidate_id}/delete")
@@ -310,6 +298,4 @@ def delete_candidate(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     db.delete(candidate)
     db.commit()
-    return RedirectResponse(
-        url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND
-    )
+    return RedirectResponse(url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND)

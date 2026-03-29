@@ -121,6 +121,4 @@ def submit_prediction(
         ctx = _build_context(constituency, current_user, db)
         return templates.TemplateResponse(request, "_predictions_section.html", ctx)
 
-    return RedirectResponse(
-        url=f"/seat/{constituency_id}", status_code=status.HTTP_302_FOUND
-    )
+    return RedirectResponse(url=f"/seat/{constituency_id}", status_code=status.HTTP_302_FOUND)

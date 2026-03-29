@@ -92,9 +92,7 @@ def test_add_candidate_without_party(
     assert cand.party_id is None
 
 
-def test_delete_candidate(
-    client: TestClient, admin: User, seat: Constituency, db: Session
-) -> None:
+def test_delete_candidate(client: TestClient, admin: User, seat: Constituency, db: Session) -> None:
     cand = Candidate(constituency_id=seat.id, name="Bob")
     db.add(cand)
     db.commit()
@@ -124,9 +122,12 @@ def test_add_candidate_requires_admin(
 ) -> None:
     db.commit()
     auth(client, user)
-    assert client.post(
-        f"/admin/seat/{seat.id}/candidates", data={"name": "X", "party_id": ""}
-    ).status_code == 403
+    assert (
+        client.post(
+            f"/admin/seat/{seat.id}/candidates", data={"name": "X", "party_id": ""}
+        ).status_code
+        == 403
+    )
 
 
 # ── Dropdown on prediction form ────────────────────────────────────────────────

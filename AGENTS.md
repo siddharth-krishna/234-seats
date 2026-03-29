@@ -34,6 +34,16 @@ pre-commit install
 
 All commands below assume the venv is active.
 
+## Database
+
+The SQLite database file is **`234seats.db`** in the project root (set by
+`DATABASE_URL=sqlite:///./234seats.db` in `.env` / `.env.example`).
+
+To reset the local dev database from scratch:
+```bash
+just reset-db   # rm 234seats.db && alembic upgrade head
+```
+
 ## Running Tests
 
 Run the full test suite with:
@@ -69,6 +79,18 @@ just migrate  # apply pending Alembic migrations
 just seed     # seed constituency data from scripts/seed_constituencies.py
 just create-user alice pw123 --admin   # create a user account
 ```
+
+## Scraping and Web Fetching
+
+- **Always save fetched pages to a temp file** before parsing — never re-download
+  the same page multiple times in a session:
+  ```bash
+  curl -s "https://example.com/page" -o /tmp/page.html
+  # then read from /tmp/page.html for all subsequent work
+  ```
+- **Use BeautifulSoup** (`from bs4 import BeautifulSoup`) to parse HTML — never
+  use `re` to extract content from HTML. BeautifulSoup is in `requirements-dev.txt`
+  and always available in the venv.
 
 ## Regenerating the SVG Map
 

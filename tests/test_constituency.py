@@ -106,14 +106,16 @@ def test_constituency_page_shows_table_after_submission(
     client: TestClient, user: User, other_user: User, open_seat: Constituency, db: Session
 ) -> None:
     """After submitting, the user can see all predictions including others'."""
-    db.add_all([
-        Prediction(
-            user_id=user.id, constituency_id=open_seat.id, predicted_winner="Alice pick"
-        ),
-        Prediction(
-            user_id=other_user.id, constituency_id=open_seat.id, predicted_winner="Bob pick"
-        ),
-    ])
+    db.add_all(
+        [
+            Prediction(
+                user_id=user.id, constituency_id=open_seat.id, predicted_winner="Alice pick"
+            ),
+            Prediction(
+                user_id=other_user.id, constituency_id=open_seat.id, predicted_winner="Bob pick"
+            ),
+        ]
+    )
     db.commit()
     logged_in_client(client, user)
     r = client.get(f"/seat/{open_seat.id}")
@@ -165,11 +167,7 @@ def test_submit_prediction_persisted(
         f"/seat/{open_seat.id}/predict",
         data={"predicted_winner": "Candidate X", "predicted_vote_share": "38.5", "comment": ""},
     )
-    pred = (
-        db.query(Prediction)
-        .filter_by(user_id=user.id, constituency_id=open_seat.id)
-        .first()
-    )
+    pred = db.query(Prediction).filter_by(user_id=user.id, constituency_id=open_seat.id).first()
     assert pred is not None
     assert pred.predicted_winner == "Candidate X"
     assert pred.predicted_vote_share == pytest.approx(38.5)
@@ -179,11 +177,7 @@ def test_submit_prediction_updates_existing(
     client: TestClient, user: User, open_seat: Constituency, db: Session
 ) -> None:
     """Submitting again updates the existing prediction (upsert)."""
-    db.add(
-        Prediction(
-            user_id=user.id, constituency_id=open_seat.id, predicted_winner="Old pick"
-        )
-    )
+    db.add(Prediction(user_id=user.id, constituency_id=open_seat.id, predicted_winner="Old pick"))
     db.commit()
     logged_in_client(client, user)
     client.post(

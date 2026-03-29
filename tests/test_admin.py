@@ -84,9 +84,7 @@ def test_admin_dashboard_accessible_to_admin(
 # ── Open / close predictions ───────────────────────────────────────────────────
 
 
-def test_open_predictions(
-    client: TestClient, admin: User, seat: Constituency, db: Session
-) -> None:
+def test_open_predictions(client: TestClient, admin: User, seat: Constituency, db: Session) -> None:
     """Admin can open predictions for a seat."""
     db.commit()
     auth(client, admin)
@@ -172,9 +170,7 @@ def test_enter_result_forbidden_for_regular_user(
 # ── Writeup ────────────────────────────────────────────────────────────────────
 
 
-def test_save_writeup(
-    client: TestClient, admin: User, seat: Constituency, db: Session
-) -> None:
+def test_save_writeup(client: TestClient, admin: User, seat: Constituency, db: Session) -> None:
     """Admin can save a writeup for a seat."""
     db.commit()
     auth(client, admin)

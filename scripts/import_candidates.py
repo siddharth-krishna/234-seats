@@ -34,8 +34,7 @@ try:
     from bs4 import BeautifulSoup
 except ImportError:
     print(
-        "Missing dependencies.\n"
-        "Run:  pip install requests beautifulsoup4",
+        "Missing dependencies.\nRun:  pip install requests beautifulsoup4",
         file=sys.stderr,
     )
     sys.exit(1)
@@ -53,40 +52,40 @@ REQUEST_DELAY = 0.5  # seconds between requests
 # Well-known TN parties: MyNeta display name → (abbreviation, hex colour).
 # Colour choices follow each party's flag/logo.
 KNOWN_PARTIES: dict[str, tuple[str, str]] = {
-    "Dravida Munnetra Kazhagam":               ("DMK",    "#E50000"),
-    "DMK":                                     ("DMK",    "#E50000"),
+    "Dravida Munnetra Kazhagam": ("DMK", "#E50000"),
+    "DMK": ("DMK", "#E50000"),
     "All India Anna Dravida Munnetra Kazhagam": ("AIADMK", "#1A1A1A"),
-    "AIADMK":                                  ("AIADMK", "#1A1A1A"),
-    "Bharatiya Janata Party":                  ("BJP",    "#FF6600"),
-    "BJP":                                     ("BJP",    "#FF6600"),
-    "Indian National Congress":                ("INC",    "#138808"),
-    "INC":                                     ("INC",    "#138808"),
-    "Pattali Makkal Katchi":                   ("PMK",    "#006400"),
-    "PMK":                                     ("PMK",    "#006400"),
-    "Viduthalai Chiruthaigal Katchi":          ("VCK",    "#0000CD"),
-    "VCK":                                     ("VCK",    "#0000CD"),
-    "Communist Party of India  (Marxist)":     ("CPI(M)", "#CC0000"),
-    "Communist Party of India (Marxist)":      ("CPI(M)", "#CC0000"),
-    "CPI(M)":                                  ("CPI(M)", "#CC0000"),
-    "Communist Party of India":                ("CPI",    "#DD0000"),
-    "CPI":                                     ("CPI",    "#DD0000"),
-    "Marumalarchi Dravida Munnetra Kazhagam":  ("MDMK",   "#008000"),
-    "MDMK":                                    ("MDMK",   "#008000"),
-    "Desiya Murpokku Dravida Kazhagam":        ("DMDK",   "#F5A623"),
-    "DMDK":                                    ("DMDK",   "#F5A623"),
-    "Naam Tamilar Katchi":                     ("NTK",    "#FF0000"),
-    "NTK":                                     ("NTK",    "#FF0000"),
-    "Amma Makkal Munnettra Kazagam":           ("AMMK",   "#8B0000"),
-    "AMMK":                                    ("AMMK",   "#8B0000"),
-    "Makkal Needhi Maiam":                     ("MNM",    "#E50000"),
-    "MNM":                                    ("MNM",    "#E50000"),
-    "Tamilaga Vettri Kazhagam":                ("TVK",    "#FF4500"),
-    "TVK":                                     ("TVK",    "#FF4500"),
-    "Indian Union Muslim League":              ("IUML",   "#006400"),
-    "IUML":                                    ("IUML",   "#006400"),
-    "All India Majlis-E-Ittehadul Muslimeen":  ("AIMIM",  "#2E8B57"),
-    "Independent":                             ("IND",    "#888888"),
-    "IND":                                     ("IND",    "#888888"),
+    "AIADMK": ("AIADMK", "#1A1A1A"),
+    "Bharatiya Janata Party": ("BJP", "#FF6600"),
+    "BJP": ("BJP", "#FF6600"),
+    "Indian National Congress": ("INC", "#138808"),
+    "INC": ("INC", "#138808"),
+    "Pattali Makkal Katchi": ("PMK", "#006400"),
+    "PMK": ("PMK", "#006400"),
+    "Viduthalai Chiruthaigal Katchi": ("VCK", "#0000CD"),
+    "VCK": ("VCK", "#0000CD"),
+    "Communist Party of India  (Marxist)": ("CPI(M)", "#CC0000"),
+    "Communist Party of India (Marxist)": ("CPI(M)", "#CC0000"),
+    "CPI(M)": ("CPI(M)", "#CC0000"),
+    "Communist Party of India": ("CPI", "#DD0000"),
+    "CPI": ("CPI", "#DD0000"),
+    "Marumalarchi Dravida Munnetra Kazhagam": ("MDMK", "#008000"),
+    "MDMK": ("MDMK", "#008000"),
+    "Desiya Murpokku Dravida Kazhagam": ("DMDK", "#F5A623"),
+    "DMDK": ("DMDK", "#F5A623"),
+    "Naam Tamilar Katchi": ("NTK", "#FF0000"),
+    "NTK": ("NTK", "#FF0000"),
+    "Amma Makkal Munnettra Kazagam": ("AMMK", "#8B0000"),
+    "AMMK": ("AMMK", "#8B0000"),
+    "Makkal Needhi Maiam": ("MNM", "#E50000"),
+    "MNM": ("MNM", "#E50000"),
+    "Tamilaga Vettri Kazhagam": ("TVK", "#FF4500"),
+    "TVK": ("TVK", "#FF4500"),
+    "Indian Union Muslim League": ("IUML", "#006400"),
+    "IUML": ("IUML", "#006400"),
+    "All India Majlis-E-Ittehadul Muslimeen": ("AIMIM", "#2E8B57"),
+    "Independent": ("IND", "#888888"),
+    "IND": ("IND", "#888888"),
 }
 
 # ── Data types ────────────────────────────────────────────────────────────────
@@ -103,9 +102,7 @@ class ScrapedCandidate(NamedTuple):
 # ── HTTP helpers ──────────────────────────────────────────────────────────────
 
 _session = requests.Session()
-_session.headers["User-Agent"] = (
-    "Mozilla/5.0 (compatible; 234seats-import/1.0)"
-)
+_session.headers["User-Agent"] = "Mozilla/5.0 (compatible; 234seats-import/1.0)"
 
 
 def _get(url: str) -> requests.Response:
@@ -195,6 +192,7 @@ def find_constituency(
 def upsert_party(db: object, party_name: str) -> Party:
     """Return an existing party or create one; updates colour/abbrev if known."""
     from sqlalchemy.orm import Session
+
     assert isinstance(db, Session)
 
     party = db.query(Party).filter_by(name=party_name).first()
@@ -221,12 +219,13 @@ def upsert_party(db: object, party_name: str) -> Party:
 def seed_parties(db: object, dry_run: bool) -> int:
     """Upsert all known TN parties.  Returns number created."""
     from sqlalchemy.orm import Session
+
     assert isinstance(db, Session)
 
     # Deduplicate by abbreviation — only seed each unique party once
     seeded: set[str] = set()
     created = 0
-    for display_name, (abbrev, color) in KNOWN_PARTIES.items():
+    for display_name, (abbrev, _color) in KNOWN_PARTIES.items():
         if abbrev in seeded:
             continue
         seeded.add(abbrev)
@@ -247,15 +246,14 @@ def import_candidates(
 ) -> None:
     """Scrape all candidates from MyNeta and insert into the DB."""
     from sqlalchemy.orm import Session
+
     assert isinstance(db, Session)
 
     print("Fetching constituency list from MyNeta…")
     constituency_ids = scrape_constituency_ids()
     print(f"Found {len(constituency_ids)} constituencies on MyNeta.")
 
-    db_constituencies = (
-        db.query(Constituency).filter_by(election_id=election_id).all()
-    )
+    db_constituencies = db.query(Constituency).filter_by(election_id=election_id).all()
 
     total_created = 0
     total_skipped = 0
@@ -271,26 +269,27 @@ def import_candidates(
 
         print(
             f"  [{i}/{len(constituency_ids)}] {constituency.name}…",
-            end=" ", flush=True,
+            end=" ",
+            flush=True,
         )
 
         candidates = scrape_candidates(myneta_id)
         created = 0
         for sc in candidates:
             exists = (
-                db.query(Candidate)
-                .filter_by(constituency_id=constituency.id, name=sc.name)
-                .first()
+                db.query(Candidate).filter_by(constituency_id=constituency.id, name=sc.name).first()
             )
             if exists:
                 continue
             if not dry_run:
                 party = upsert_party(db, sc.party_name)
-                db.add(Candidate(
-                    constituency_id=constituency.id,
-                    name=sc.name,
-                    party_id=party.id,
-                ))
+                db.add(
+                    Candidate(
+                        constituency_id=constituency.id,
+                        name=sc.name,
+                        party_id=party.id,
+                    )
+                )
             created += 1
 
         if not dry_run:
@@ -322,12 +321,12 @@ def run(election_id: int, dry_run: bool) -> None:
             sys.exit(1)
 
         # ── Step 1: seed parties (always runs) ────────────────────────────────
-        print(f"Seeding {len(set(a for a,_ in KNOWN_PARTIES.values()))} known TN parties…")
+        print(f"Seeding {len({a for a, _ in KNOWN_PARTIES.values()})} known TN parties…")
         n = seed_parties(db, dry_run)
         print(f"  {n} party records created/updated.")
 
         # ── Step 2: import candidates (only if MyNeta is live) ────────────────
-        print(f"\nChecking if MyNeta TN 2026 candidate data is live…")
+        print("\nChecking if MyNeta TN 2026 candidate data is live…")
         if not _candidates_live():
             print(
                 "  Not yet available — MyNeta's TN 2026 database hasn't been populated.\n"
@@ -349,11 +348,14 @@ def run(election_id: int, dry_run: bool) -> None:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--election-id", type=int, default=1,
+        "--election-id",
+        type=int,
+        default=1,
         help="DB election ID to import into (default: 1)",
     )
     parser.add_argument(
-        "--dry-run", action="store_true",
+        "--dry-run",
+        action="store_true",
         help="Fetch and parse but do not write to the database",
     )
     args = parser.parse_args()

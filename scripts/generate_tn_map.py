@@ -27,7 +27,9 @@ PADDING = 10  # px padding inside SVG viewport
 
 OUTPUT = Path(__file__).parent.parent / "app" / "static" / "tn_map.svg"
 
-SHAPEFILE_BASE = "https://raw.githubusercontent.com/datameet/maps/master/assembly-constituencies/India_AC"
+SHAPEFILE_BASE = (
+    "https://raw.githubusercontent.com/datameet/maps/master/assembly-constituencies/India_AC"
+)
 NEEDED_EXTENSIONS = [".shp", ".dbf", ".shx"]
 
 
@@ -146,7 +148,7 @@ def main() -> None:
     lines: list[str] = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}"',
         f'     width="{SVG_WIDTH}" height="{SVG_HEIGHT}" id="tn-map">',
-        "  <g id=\"constituencies\">",
+        '  <g id="constituencies">',
     ]
 
     for item in tn_items:
@@ -156,9 +158,7 @@ def main() -> None:
         ac_name = str(rec["AC_NAME"])
         dist = str(rec.get("DIST_NAME", ""))
 
-        d = build_multipart_path(
-            shp.points, list(shp.parts), min_x, min_y, scale, SVG_HEIGHT
-        )
+        d = build_multipart_path(shp.points, list(shp.parts), min_x, min_y, scale, SVG_HEIGHT)
 
         # Sanitise name for use as an id
         safe_id = f"ac-{ac_no}"
