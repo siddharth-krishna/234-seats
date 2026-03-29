@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -11,9 +10,9 @@ from app.models.candidate import Candidate
 from app.models.constituency import Constituency
 from app.models.prediction import Prediction
 from app.models.user import User
+from app.templates_config import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 
 def _get_constituency_or_404(db: Session, constituency_id: int) -> Constituency:

@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -11,9 +10,9 @@ from app.models.constituency import Constituency
 from app.models.election import Election
 from app.models.user import User
 from app.services.scoring import SORT_KEYS, compute_scores, sort_scores
+from app.templates_config import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/", response_class=HTMLResponse)

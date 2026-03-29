@@ -43,6 +43,62 @@ just lint      # ruff check + format check
 just fix       # auto-fix lint issues
 ```
 
+## Deployment (PythonAnywhere)
+
+### One-time setup
+
+1. Open a **Bash console** on PythonAnywhere and clone the repo:
+   ```bash
+   git clone <repo-url> ~/234-seats
+   ```
+
+2. Create a virtualenv and install dependencies:
+   ```bash
+   mkvirtualenv --python=python3.12 234-seats
+   pip install -r ~/234-seats/requirements.txt
+   ```
+
+3. Run migrations:
+   ```bash
+   cd ~/234-seats && alembic upgrade head
+   ```
+
+4. **Web tab → Add new web app → Manual configuration (Python 3.12)**
+   - Source directory: `/home/<you>/234-seats`
+   - Virtualenv: `/home/<you>/.virtualenvs/234-seats`
+   - WSGI file: replace its contents with a single line:
+     ```python
+     from wsgi import application
+     ```
+     then set the working directory at the top to `/home/<you>/234-seats`
+
+5. **Web tab → Environment variables:**
+   ```
+   SECRET_KEY=<long random string>
+   DEBUG=False
+   DATABASE_URL=sqlite:////home/<you>/234-seats/db.sqlite3
+   ```
+
+6. Click **Reload**. App is live at `<you>.pythonanywhere.com`.
+
+### Redeploying after changes
+
+Set these three variables in your PythonAnywhere bash profile (`~/.bashrc`):
+
+```bash
+export PA_USERNAME=<you>
+export PA_DOMAIN=<you>.pythonanywhere.com
+export PA_API_TOKEN=<token from Account → API token tab>
+```
+
+Then each deploy is one command:
+
+```bash
+bash ~/234-seats/scripts/pa_deploy.sh
+```
+
+This pulls the latest code, installs any new dependencies, runs migrations, and reloads the web app.
+
 ## Features
 
 - Session-based login/logout (admin-created accounts, no self-registration)
