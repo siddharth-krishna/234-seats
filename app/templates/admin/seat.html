@@ -167,7 +167,7 @@
       <button type="submit"
               class="self-start rounded-md bg-indigo-600 hover:bg-indigo-700 text-white
                      font-medium px-5 py-2 text-sm transition-colors">
-        Save result
+        {{ "Update result" if constituency.result else "Save result" }}
       </button>
     </form>
   </section>
@@ -176,6 +176,9 @@
   <section>
     <h2 class="text-base font-semibold mb-3">Writeup</h2>
     <form method="post" action="/admin/seat/{{ constituency.id }}/writeup"
+          hx-post="/admin/seat/{{ constituency.id }}/writeup"
+          hx-target="#writeup-status"
+          hx-swap="outerHTML"
           class="bg-white rounded-xl border border-gray-200 p-5 flex flex-col gap-4 shadow-sm">
       <div>
         <label class="block text-sm font-medium mb-1" for="writeup">
@@ -187,11 +190,14 @@
                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono
                          focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ constituency.writeup or "" }}</textarea>
       </div>
-      <button type="submit"
-              class="self-start rounded-md bg-gray-800 hover:bg-gray-900 text-white
-                     font-medium px-5 py-2 text-sm transition-colors">
-        Save writeup
-      </button>
+      <div class="flex items-center gap-4">
+        <button type="submit"
+                class="rounded-md bg-gray-800 hover:bg-gray-900 text-white
+                       font-medium px-5 py-2 text-sm transition-colors">
+          Save writeup
+        </button>
+        <span id="writeup-status" class="text-sm text-gray-400"></span>
+      </div>
     </form>
   </section>
 

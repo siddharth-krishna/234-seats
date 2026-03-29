@@ -94,6 +94,9 @@ def sort_scores(
         sort_by = "correct_seats"
         descending = True
 
+    if sort_by == "username":
+        return sorted(scores, key=lambda s: s.username.lower(), reverse=descending)
+
     def key(s: UserScore) -> tuple[int, float]:
         val = getattr(s, sort_by)
         # None sorts after all real values

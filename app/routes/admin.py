@@ -1,5 +1,6 @@
 """Admin routes: seat management, result entry, writeup editing."""
 
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy.orm import Session
@@ -153,17 +154,23 @@ def enter_result(
 # ── Writeup editing ────────────────────────────────────────────────────────────
 
 
-@router.post("/seat/{constituency_id}/writeup")
+@router.post("/seat/{constituency_id}/writeup", response_model=None)
 def save_writeup(
     constituency_id: int,
+    request: Request,
     writeup: str = Form(default=""),
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
-) -> RedirectResponse:
+) -> HTMLResponse | RedirectResponse:
     """Save the writeup for a constituency."""
     c = _get_constituency_or_404(db, constituency_id)
     c.writeup = writeup.strip() or None
     db.commit()
+    if request.headers.get("HX-Request"):
+        saved_at = datetime.now(tz=timezone.utc).strftime("%H:%M")
+        return HTMLResponse(
+            content=f'<span id="writeup-status" class="text-sm text-green-700">Saved at {saved_at} UTC</span>'
+        )
     return RedirectResponse(
         url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND
     )
