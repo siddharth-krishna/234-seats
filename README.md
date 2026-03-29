@@ -113,35 +113,38 @@ This pulls the latest code, installs any new dependencies, runs migrations, and 
 - Session-based login/logout (admin-created accounts, no self-registration)
 - Constituency pages with prediction form (winner, vote share %, comment)
 - Predictions from other users are hidden until you submit your own
-- Leaderboard: correct seats, vote-share deviation (MAE, RMSE), sortable by column
-- Admin: open/close predictions per seat, enter final results, publish writeups
+- Leaderboard: correct seats, vote-share deviation (MAE, RMSE), sortable by column; predictions column shows `X / Y` (submitted vs open seats)
+- Interactive SVG map of all 234 Tamil Nadu constituencies on the home page, colour-coded by status (open, predicted, results declared, closed); click any constituency to navigate to it
+- Alphabetical constituency grid below the map, grouped by status
+- Admin: open/close predictions per seat, enter final results, publish writeups, manage parties and candidates
+- Graceful 404/403/500 error pages
 - All election data scoped to an election object — reusable for future elections
 
 ## Wishlist
 
-- Home page map of all 234 constituencies, colour-coded by prediction status; clickable
-- Links to Harsh's blog posts and per-seat analysis
 - Edit your prediction after submission (before predictions close)
+- Links to per-seat analysis blog posts
 - Scrape live results from ECI during results day
 - Graph of leaderboard standings over time
 - Export predictions and results as CSV/spreadsheet
 - User badges and titles based on accuracy
 - Archive a completed election; start fresh for the next one
+- Dark mode
 
 ## Original Prompt
 
 - Home page shows a map of all the constituencies, a subset of which are clickable, and a table of users and overall metrics
     - clicking on a constituency takes you to the constituency page
-    - links to Harsh’s blogs and analysis of the election overall
-- The overall metrics table: 
-    - table of users with columns: num predictions, correct seats so far, deviation in vote share (max, MAE, RMSE), 
+    - links to Harsh's blogs and analysis of the election overall
+- The overall metrics table:
+    - table of users with columns: num predictions, correct seats so far, deviation in vote share (max, MAE, RMSE),
     - Can sort by any column
 - Constituency page:
     - Details: name, district, population, current MLA and party
     - A short writeup explaining the history and current context of the fight for this seat
     - User form to submit predictions (winner from dropdown, vote share % of winner, text prediction/comment for that seat)
-    - After submission, can see a predictions table on this seat: each user’s predicted winner, vote share, comments
-    - Can only see others’ predictions once you’ve submitted yours
+    - After submission, can see a predictions table on this seat: each user's predicted winner, vote share, comments
+    - Can only see others' predictions once you've submitted yours
     - After election results are out, the prediction table also has the actual winner and vote share
     - Stretch: Edit submission later?
 - Managing the website:
