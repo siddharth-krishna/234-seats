@@ -25,8 +25,8 @@ results are in.
 └─────────────────┬───────────────────────────┘
                   │ SQLAlchemy ORM
 ┌─────────────────▼───────────────────────────┐
-│         SQLite (prod + dev)                  │
-│  Alembic migrations                        │
+│         SQLite (prod + dev)                 │
+│  Alembic migrations                         │
 └─────────────────────────────────────────────┘
 ```
 
