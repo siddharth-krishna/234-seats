@@ -4,7 +4,30 @@ A web app for predicting Tamil Nadu legislative assembly election results and co
 
 Users submit a predicted winner, vote share, and comment for each constituency. After results are declared, a leaderboard ranks everyone by accuracy (correct seats, vote-share MAE/RMSE). Hosted on PythonAnywhere.
 
-## Getting Started
+## Features
+
+- Session-based login/logout (admin-created accounts, no self-registration)
+- Constituency pages with prediction form (winner, vote share %, comment)
+- Predictions from other users are hidden until you submit your own
+- Leaderboard: correct seats, vote-share deviation (MAE, RMSE), sortable by column; predictions column shows `X / Y` (submitted vs open seats)
+- Interactive SVG map of all 234 Tamil Nadu constituencies on the home page, colour-coded by status (open, predicted, results declared, closed); click any constituency to navigate to it
+- Alphabetical constituency grid below the map, grouped by status
+- Admin: open/close predictions per seat, enter final results, publish writeups, manage parties and candidates
+- Graceful 404/403/500 error pages
+- All election data scoped to an election object — reusable for future elections
+
+## Wishlist
+
+- Edit your prediction after submission (before predictions close)
+- Links to per-seat analysis blog posts
+- Scrape live results from ECI during results day
+- Graph of leaderboard standings over time
+- Export predictions and results as CSV/spreadsheet
+- User badges and titles based on accuracy
+- Archive a completed election; start fresh for the next one
+- Dark mode
+
+## Local Development
 
 **Prerequisites:** Python 3.12+, [`just`](https://github.com/casey/just)
 
@@ -107,29 +130,6 @@ bash ~/234-seats/scripts/pa_deploy.sh
 ```
 
 This pulls the latest code, installs any new dependencies, runs migrations, and reloads the web app.
-
-## Features
-
-- Session-based login/logout (admin-created accounts, no self-registration)
-- Constituency pages with prediction form (winner, vote share %, comment)
-- Predictions from other users are hidden until you submit your own
-- Leaderboard: correct seats, vote-share deviation (MAE, RMSE), sortable by column; predictions column shows `X / Y` (submitted vs open seats)
-- Interactive SVG map of all 234 Tamil Nadu constituencies on the home page, colour-coded by status (open, predicted, results declared, closed); click any constituency to navigate to it
-- Alphabetical constituency grid below the map, grouped by status
-- Admin: open/close predictions per seat, enter final results, publish writeups, manage parties and candidates
-- Graceful 404/403/500 error pages
-- All election data scoped to an election object — reusable for future elections
-
-## Wishlist
-
-- Edit your prediction after submission (before predictions close)
-- Links to per-seat analysis blog posts
-- Scrape live results from ECI during results day
-- Graph of leaderboard standings over time
-- Export predictions and results as CSV/spreadsheet
-- User badges and titles based on accuracy
-- Archive a completed election; start fresh for the next one
-- Dark mode
 
 ## Original Prompt
 
