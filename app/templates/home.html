@@ -9,116 +9,226 @@
 
 {% else %}
 
-<h1 class="text-2xl font-bold mb-1">{{ election.name }}</h1>
-<p class="text-gray-500 text-sm mb-8">{{ election.description or "" }}</p>
+<div class="mb-5">
+  <h1 class="text-2xl font-bold text-gray-900">{{ election.name }}</h1>
+  {% if election.description %}<p class="text-gray-500 text-sm mt-1">{{ election.description }}</p>{% endif %}
+</div>
 
-{# ── Leaderboard ──────────────────────────────────────────────────────────── #}
-<section class="mb-12">
-  <h2 class="text-lg font-semibold mb-3">Leaderboard</h2>
+{# ── Map + Leaderboard two-column layout ─────────────────────────────────── #}
+<div class="flex flex-col lg:flex-row gap-6 mb-12">
 
-  {% if scores %}
-  <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
-    <table class="min-w-full text-sm">
-      <thead class="bg-gray-50 text-gray-600 uppercase text-xs tracking-wide">
-        <tr>
-          <th class="px-4 py-3 text-left w-8">#</th>
-          {% set cols = [
-            ("username",        "User"),
-            ("num_predictions", "Predictions"),
-            ("correct_seats",   "Correct"),
-            ("vote_share_mae",  "MAE"),
-            ("vote_share_rmse", "RMSE"),
-          ] %}
-          {% for key, label in cols %}
-            {% set next_dir = "asc" if (sort == key and dir == "desc") else "desc" %}
-            <th class="px-4 py-3 text-right {% if key == 'username' %}text-left{% endif %}">
-              <a href="/?sort={{ key }}&dir={{ next_dir }}"
-                 class="hover:text-indigo-600 {% if sort == key %}text-indigo-600 font-bold{% endif %}">
-                {{ label }}
-                {% if sort == key %}
-                  {{ "↑" if dir == "asc" else "↓" }}
+  {# ── Left: TN Map ──────────────────────────────────────────────────────── #}
+  <div class="lg:w-2/5 shrink-0">
+    <h2 class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-3">Map</h2>
+
+    {# Legend #}
+    <div class="flex flex-wrap gap-3 text-xs text-gray-600 mb-3">
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block w-3 h-3 rounded-sm bg-green-400"></span> Open
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block w-3 h-3 rounded-sm bg-green-700"></span> Open + predicted
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block w-3 h-3 rounded-sm bg-red-500"></span> Results declared
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="inline-block w-3 h-3 rounded-sm bg-gray-300"></span> Closed
+      </span>
+    </div>
+
+    <div id="map-container"
+         class="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm cursor-pointer">
+      {# SVG is injected by JS below #}
+      <div id="map-placeholder" class="flex items-center justify-center h-64 text-gray-400 text-sm">
+        Loading map…
+      </div>
+    </div>
+
+    <p class="mt-2 text-xs text-gray-400">Click a constituency to open it.</p>
+  </div>
+
+  {# ── Right: Leaderboard ────────────────────────────────────────────────── #}
+  <div class="flex-1 min-w-0">
+    <h2 class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-3">Leaderboard</h2>
+
+    {% if scores %}
+    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 text-gray-500 uppercase text-xs tracking-wide">
+          <tr>
+            <th class="px-4 py-3 text-left w-8">#</th>
+            {% set cols = [
+              ("username",        "User",        ""),
+              ("num_predictions", "Predictions", ""),
+              ("correct_seats",   "Correct",     ""),
+              ("vote_share_mae",  "MAE",         "Mean Absolute Error — average difference (in %) between your predicted vote share and the actual result. Lower is better."),
+              ("vote_share_rmse", "RMSE",        "Root Mean Square Error — like MAE but penalises large errors more heavily. Lower is better."),
+            ] %}
+            {% for key, label, tooltip in cols %}
+              {% set next_dir = "asc" if (sort == key and dir == "desc") else "desc" %}
+              <th class="px-4 py-3 text-right {% if key == 'username' %}text-left{% endif %}">
+                <a href="/?sort={{ key }}&dir={{ next_dir }}"
+                   class="hover:text-red-600 {% if sort == key %}text-red-600 font-bold{% endif %}">
+                  {{ label }}
+                  {% if sort == key %}{{ "↑" if dir == "asc" else "↓" }}{% endif %}
+                </a>
+                {% if tooltip %}
+                  <span class="ml-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full
+                               bg-gray-200 text-gray-500 text-xs cursor-help align-middle"
+                        title="{{ tooltip }}">?</span>
                 {% endif %}
-              </a>
-            </th>
+              </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for s in scores %}
+          <tr class="{% if s.user_id == current_user.id %}bg-red-50{% else %}hover:bg-gray-50{% endif %}">
+            <td class="px-4 py-3 text-gray-400 tabular-nums">{{ loop.index }}</td>
+            <td class="px-4 py-3 font-medium text-gray-900">
+              {{ s.username }}
+              {% if s.user_id == current_user.id %}
+                <span class="ml-1 text-xs text-red-400">(you)</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-right text-gray-700 tabular-nums">
+              {{ s.num_predictions }}{% if open_seats_count %} / {{ open_seats_count }}{% endif %}
+            </td>
+            <td class="px-4 py-3 text-right font-semibold text-gray-800 tabular-nums">
+              {% if s.seats_with_results > 0 %}
+                {{ s.correct_seats }} / {{ s.seats_with_results }}
+              {% else %}
+                <span class="text-gray-300">—</span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-right text-gray-600 tabular-nums">
+              {{ "%.2f"|format(s.vote_share_mae) if s.vote_share_mae is not none else "—" }}
+            </td>
+            <td class="px-4 py-3 text-right text-gray-600 tabular-nums">
+              {{ "%.2f"|format(s.vote_share_rmse) if s.vote_share_rmse is not none else "—" }}
+            </td>
+          </tr>
           {% endfor %}
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-gray-100">
-        {% for s in scores %}
-        <tr class="{% if s.user_id == current_user.id %}bg-indigo-50{% else %}hover:bg-gray-50{% endif %}">
-          <td class="px-4 py-3 text-gray-400">{{ loop.index }}</td>
-          <td class="px-4 py-3 font-medium">
-            {{ s.username }}
-            {% if s.user_id == current_user.id %}
-              <span class="ml-1 text-xs text-indigo-400">(you)</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 text-right text-gray-700">{{ s.num_predictions }}</td>
-          <td class="px-4 py-3 text-right font-semibold">
-            {% if s.seats_with_results > 0 %}
-              {{ s.correct_seats }} / {{ s.seats_with_results }}
-            {% else %}
-              <span class="text-gray-400">—</span>
-            {% endif %}
-          </td>
-          <td class="px-4 py-3 text-right text-gray-700">
-            {{ "%.2f"|format(s.vote_share_mae) if s.vote_share_mae is not none else "—" }}
-          </td>
-          <td class="px-4 py-3 text-right text-gray-700">
-            {{ "%.2f"|format(s.vote_share_rmse) if s.vote_share_rmse is not none else "—" }}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+      <p class="text-gray-400 text-sm">No users yet.</p>
+    {% endif %}
   </div>
-  {% else %}
-    <p class="text-gray-400 text-sm">No users yet.</p>
-  {% endif %}
-</section>
 
-{# ── Constituencies ───────────────────────────────────────────────────────── #}
+</div>
+
+{# ── Constituency list (alphabetical) ─────────────────────────────────────── #}
 <section>
-  <h2 class="text-lg font-semibold mb-3">Constituencies</h2>
+  <h2 class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">All Constituencies</h2>
 
-  {% set open_seats = constituencies | selectattr("predictions_open") | list %}
-  {% set closed_seats = constituencies | rejectattr("predictions_open") | list %}
+  {% set sorted_constituencies = constituencies | sort(attribute="name") %}
 
-  {% if open_seats %}
-  <h3 class="text-sm font-medium text-green-700 mb-2">Open for predictions</h3>
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 mb-6">
-    {% for c in open_seats %}
-    <a href="/seat/{{ c.id }}"
-       class="rounded-lg border border-green-200 bg-green-50 hover:bg-green-100 px-3 py-2 text-sm transition-colors">
-      <span class="font-medium text-green-900">{{ c.name }}</span>
-      <span class="block text-xs text-green-600">{{ c.district }}</span>
-    </a>
-    {% endfor %}
-  </div>
-  {% endif %}
+  {# Group into open / closed / results for the grid header rows #}
+  {% set open_seats    = sorted_constituencies | selectattr("predictions_open") | list %}
+  {% set results_seats = sorted_constituencies | rejectattr("predictions_open") | selectattr("result") | list %}
+  {% set closed_seats  = sorted_constituencies | rejectattr("predictions_open") | rejectattr("result") | list %}
 
-  {% if closed_seats %}
-  <h3 class="text-sm font-medium text-gray-500 mb-2">
-    {{ "Results declared" if closed_seats | selectattr("result") | list else "Closed" }}
-  </h3>
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-    {% for c in closed_seats %}
-    <a href="/seat/{{ c.id }}"
-       class="rounded-lg border border-gray-200 bg-white hover:bg-gray-50 px-3 py-2 text-sm transition-colors">
-      <span class="font-medium text-gray-700">{{ c.name }}</span>
-      <span class="block text-xs text-gray-400">{{ c.district }}</span>
-      {% if c.result %}
-        <span class="block text-xs text-indigo-600 mt-0.5">{{ c.result.winner_name }}</span>
-      {% endif %}
-    </a>
-    {% endfor %}
-  </div>
-  {% endif %}
+  {% for group_label, group_color, group_seats in [
+      ("Open for predictions", "text-green-700", open_seats),
+      ("Results declared",     "text-gray-600",  results_seats),
+      ("Closed",               "text-gray-500",  closed_seats),
+  ] %}
+    {% if group_seats %}
+    <h3 class="text-xs font-semibold {{ group_color }} uppercase tracking-wide mt-5 mb-2">
+      {{ group_label }} ({{ group_seats | length }})
+    </h3>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+      {% for c in group_seats %}
+      <a href="/seat/{{ c.id }}"
+         class="rounded-lg border px-3 py-2 text-sm transition-colors
+                {% if c.predictions_open %}
+                  border-green-200 bg-green-50 hover:bg-green-100
+                {% elif c.result %}
+                  border-gray-200 bg-white hover:bg-gray-50
+                {% else %}
+                  border-gray-200 bg-gray-50 hover:bg-gray-100
+                {% endif %}">
+        <span class="font-medium
+          {% if c.predictions_open %}text-green-900
+          {% else %}text-gray-700{% endif %}">{{ c.name }}</span>
+        <span class="block text-xs
+          {% if c.predictions_open %}text-green-600
+          {% else %}text-gray-400{% endif %}">{{ c.district }}</span>
+        {% if c.result %}
+          <span class="block text-xs font-medium text-gray-600 mt-0.5">{{ c.result.winner_name }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endfor %}
 
   {% if not constituencies %}
     <p class="text-gray-400 text-sm">No constituencies loaded yet. Run <code>just seed</code>.</p>
   {% endif %}
 </section>
+
+{# ── Map interaction ──────────────────────────────────────────────────────── #}
+<script>
+(function () {
+  // Constituency data from server: { acNo: {id, name, open, predicted, result} }
+  const DATA = {{ map_data | tojson }};
+
+  // Colour scheme
+  const COLORS = {
+    open:          "#4ade80",   // green-400
+    openPredicted: "#15803d",   // green-700
+    result:        "#ef4444",   // red-500
+    closed:        "#d1d5db",   // gray-300
+    hover:         "#fca5a5",   // red-300
+  };
+
+  function colorFor(d) {
+    if (!d) return COLORS.closed;
+    if (d.result) return COLORS.result;
+    if (d.open && d.predicted) return COLORS.openPredicted;
+    if (d.open) return COLORS.open;
+    return COLORS.closed;
+  }
+
+  fetch("/static/tn_map.svg")
+    .then(r => r.text())
+    .then(svgText => {
+      const container = document.getElementById("map-container");
+      container.innerHTML = svgText;
+
+      const svg = container.querySelector("svg");
+      svg.removeAttribute("width");
+      svg.removeAttribute("height");
+      svg.style.width = "100%";
+      svg.style.height = "auto";
+      svg.style.display = "block";
+
+      // Apply colours and click handlers
+      svg.querySelectorAll("path.constituency").forEach(path => {
+        const acNo = parseInt(path.dataset.acNo, 10);
+        const d = DATA[acNo];
+        const baseColor = colorFor(d);
+
+        path.setAttribute("fill", baseColor);
+        path.style.cursor = d ? "pointer" : "default";
+        path.style.transition = "fill 0.1s";
+
+        if (d) {
+          path.addEventListener("mouseenter", () => path.setAttribute("fill", COLORS.hover));
+          path.addEventListener("mouseleave", () => path.setAttribute("fill", baseColor));
+          path.addEventListener("click", () => { window.location.href = `/seat/${d.id}`; });
+        }
+      });
+    })
+    .catch(() => {
+      document.getElementById("map-placeholder").textContent = "Map unavailable.";
+    });
+})();
+</script>
 
 {% endif %}
 {% endblock %}

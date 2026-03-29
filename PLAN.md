@@ -281,10 +281,13 @@ Each phase is self-contained and leaves the app in a working, deployable state.
 
 *Goal: interactive SVG map on the home page; general UI polish.*
 
-- [ ] Clickable SVG map of Tamil Nadu constituencies (color-coded by party/prediction status)
+- [ ] Clickable SVG map of Tamil Nadu constituencies: find one online. Put the map on the left half of the homepage, with the leaderboard table on the right. Color-code constituency by open/closed, and have icons to show if a user has submitted a prediction and if results are announced. Also have a list of all constituencies at the bottom of the page in alphabetical order with the open/closed, predicted, results status for people who don't want to use the map.
+- [ ] home page: TN map on the left, main table of results on the right when logged in. login page should look like home page, with the TN map, but instead of main table on the right it shows the login form
 - [ ] Mobile-responsive layout
-- [ ] Links to Harsh's blog/analysis per seat
-- [ ] Sort-by-column on the leaderboard (HTMX or JS)
+- [ ] Sort-by-column on the leaderboard (HTMX or JS): currently there's a float/string type error when sorting leaderboard by username
+- [ ] leaderboard: In the predictions column, also show how many seats are open for betting. E.g. it should say `2 / 6` if 6 seats are open and the user has placed predicions on 2 of them. The sort function should only consider the number 2.
+- [ ] admin/seat: Save writeup should show some kind of reponse. "saved at 14:05" perhaps? Also when there's a current result, Save result button should say Update result
+- [ ] add ? icons next to MAE and RMSE and explain what they mean and how to interpret them
 - [ ] Graceful error pages (404, 403, 500)
 
 ---
