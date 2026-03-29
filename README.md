@@ -45,6 +45,9 @@ just fix       # auto-fix lint issues
 
 ## Deployment (PythonAnywhere)
 
+PythonAnywhere supports FastAPI natively via their ASGI hosting (uvicorn over a
+unix socket). Do **not** use the "Web" tab — use the `pa` CLI tool instead.
+
 ### One-time setup
 
 1. Open a **Bash console** on PythonAnywhere and clone the repo:
@@ -61,44 +64,40 @@ just fix       # auto-fix lint issues
 3. Create a `.env` file with your secrets (never commit this):
    ```bash
    cat > ~/234-seats/.env <<'EOF'
-   export SECRET_KEY=<long random string>
-   export DEBUG=False
-   export DATABASE_URL=sqlite:////home/<you>/234-seats/db.sqlite3
+   SECRET_KEY=<long random string>
+   DEBUG=False
+   DATABASE_URL=sqlite:////home/<you>/234-seats/db.sqlite3
    EOF
    ```
 
 4. So that `alembic` and scripts pick up those variables in the Bash console,
-   add a line to your virtualenv's postactivate script:
+   source the `.env` file from your virtualenv's postactivate script:
    ```bash
    echo 'set -a; source ~/234-seats/.env; set +a' >> ~/.virtualenvs/234-seats/bin/postactivate
+   workon 234-seats
    ```
-   Then reload the virtualenv: `workon 234-seats`
 
 5. Run migrations:
    ```bash
    cd ~/234-seats && alembic upgrade head
    ```
 
-6. **Web tab → Add new web app → Manual configuration (Python 3.12)**
-   - Source directory: `/home/<you>/234-seats`
-   - Virtualenv: `/home/<you>/.virtualenvs/234-seats`
-   - WSGI file: replace its entire contents with:
-     ```python
-     import sys
-     sys.path.insert(0, '/home/<you>/234-seats')
-     from wsgi import application
-     ```
+6. Install the `pa` CLI and create the ASGI web app:
+   ```bash
+   pip install pythonanywhere
+   pa website create \
+     --domain <you>.pythonanywhere.com \
+     --command '/home/<you>/.virtualenvs/234-seats/bin/uvicorn --app-dir /home/<you>/234-seats --uds ${DOMAIN_SOCKET} app.main:app'
+   ```
 
-7. Click **Reload**. App is live at `<you>.pythonanywhere.com`.
+App is live at `<you>.pythonanywhere.com`.
 
 ### Redeploying after changes
 
-Set these three variables in your PythonAnywhere bash profile (`~/.bashrc`):
+Set these in your PythonAnywhere `~/.bashrc`:
 
 ```bash
-export PA_USERNAME=<you>
 export PA_DOMAIN=<you>.pythonanywhere.com
-export PA_API_TOKEN=<token from Account → API token tab>
 ```
 
 Then each deploy is one command:

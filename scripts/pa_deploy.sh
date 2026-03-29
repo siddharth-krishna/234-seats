@@ -4,10 +4,8 @@
 #
 #   bash ~/234-seats/scripts/pa_deploy.sh
 #
-# Required environment variables (set in your PA bash profile or .env):
-#   PA_USERNAME   — your PythonAnywhere username
-#   PA_DOMAIN     — web app domain, e.g. username.pythonanywhere.com
-#   PA_API_TOKEN  — API token from pythonanywhere.com/user/<you>/account/#api_token
+# Required environment variables (set in ~/.bashrc on PythonAnywhere):
+#   PA_DOMAIN  — e.g. 234seats.pythonanywhere.com
 
 set -euo pipefail
 
@@ -26,9 +24,6 @@ echo "==> Running migrations"
 alembic upgrade head
 
 echo "==> Reloading web app"
-curl -s -X POST \
-  "https://www.pythonanywhere.com/api/v0/user/${PA_USERNAME}/webapps/${PA_DOMAIN}/reload/" \
-  -H "Authorization: Token ${PA_API_TOKEN}"
+pa website reload --domain "${PA_DOMAIN}"
 
-echo ""
 echo "==> Deploy complete: https://${PA_DOMAIN}"
