@@ -2,7 +2,7 @@
 
 {% if constituency.predictions_open and not user_prediction %}
 {# ── Prediction form ────────────────────────────────────────────────────── #}
-<h2 class="text-lg font-semibold mb-4">Submit your prediction</h2>
+<h2 class="text-lg font-semibold mb-4 text-gray-900">Submit your prediction</h2>
 <form
   method="post"
   action="/seat/{{ constituency.id }}/predict"
@@ -12,13 +12,13 @@
   class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col gap-4 max-w-lg"
 >
   <div>
-    <label class="block text-sm font-medium mb-1" for="predicted_winner">
+    <label class="block text-sm font-medium mb-1 text-gray-700" for="predicted_winner">
       Predicted winner <span class="text-red-500">*</span>
     </label>
     {% if candidates %}
       <select id="predicted_winner" name="predicted_winner" required
               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                     focus:outline-none focus:ring-2 focus:ring-red-500">
         <option value="">Select candidate…</option>
         {% for c in candidates %}
           <option value="{{ c.name }}">
@@ -31,36 +31,36 @@
         id="predicted_winner" name="predicted_winner" type="text"
         required placeholder="Candidate name"
         class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
-               focus:outline-none focus:ring-2 focus:ring-indigo-500"
+               focus:outline-none focus:ring-2 focus:ring-red-500"
       />
     {% endif %}
   </div>
 
   <div>
-    <label class="block text-sm font-medium mb-1" for="predicted_vote_share">
+    <label class="block text-sm font-medium mb-1 text-gray-700" for="predicted_vote_share">
       Predicted vote share <span class="text-gray-400 font-normal">(%, optional)</span>
     </label>
     <input
       id="predicted_vote_share" name="predicted_vote_share" type="number"
       min="0" max="100" step="0.1" placeholder="e.g. 42.5"
-      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
     />
   </div>
 
   <div>
-    <label class="block text-sm font-medium mb-1" for="comment">
+    <label class="block text-sm font-medium mb-1 text-gray-700" for="comment">
       Comment <span class="text-gray-400 font-normal">(optional)</span>
     </label>
     <textarea
       id="comment" name="comment" rows="3"
       placeholder="Your reasoning, analysis, or just a hunch…"
-      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
     ></textarea>
   </div>
 
   <button
     type="submit"
-    class="self-start rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 text-sm transition-colors"
+    class="self-start rounded-md bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 text-sm transition-colors"
   >
     Submit prediction
   </button>
@@ -70,22 +70,22 @@
 {# ── Predictions table ──────────────────────────────────────────────────── #}
 
 {% if user_prediction %}
-<div class="mb-6 rounded-xl border border-indigo-200 bg-indigo-50 p-4 max-w-lg">
-  <p class="text-sm font-medium text-indigo-800 mb-1">Your prediction</p>
-  <p class="text-base font-semibold">{{ user_prediction.predicted_winner }}</p>
+<div class="mb-6 rounded-xl border border-gray-200 bg-red-50 p-4 max-w-lg">
+  <p class="text-sm font-semibold text-gray-700 mb-1">Your prediction</p>
+  <p class="text-base font-bold text-gray-900">{{ user_prediction.predicted_winner }}</p>
   {% if user_prediction.predicted_vote_share is not none %}
-    <p class="text-sm text-indigo-700">{{ "%.1f"|format(user_prediction.predicted_vote_share) }}% vote share</p>
+    <p class="text-sm text-gray-600">{{ "%.1f"|format(user_prediction.predicted_vote_share) }}% vote share</p>
   {% endif %}
   {% if user_prediction.comment %}
-    <p class="text-sm text-gray-600 mt-1 italic">"{{ user_prediction.comment }}"</p>
+    <p class="text-sm text-gray-500 mt-1 italic">"{{ user_prediction.comment }}"</p>
   {% endif %}
 </div>
 {% endif %}
 
 {% if constituency.result %}
 <div class="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 max-w-lg">
-  <p class="text-sm font-medium text-green-800 mb-1">Official result</p>
-  <p class="text-base font-semibold">{{ constituency.result.winner_name }}
+  <p class="text-sm font-semibold text-green-800 mb-1">Official result</p>
+  <p class="text-base font-bold text-gray-900">{{ constituency.result.winner_name }}
     <span class="text-sm font-normal text-green-700">({{ constituency.result.winner_party }})</span>
   </p>
   {% if constituency.result.winner_vote_share is not none %}
@@ -94,7 +94,7 @@
 </div>
 {% endif %}
 
-<h2 class="text-lg font-semibold mb-3">All predictions</h2>
+<h2 class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-3">All predictions</h2>
 {% if predictions %}
 <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm max-w-3xl">
   <table class="min-w-full text-sm">
@@ -111,17 +111,17 @@
       {% for p in predictions %}
       {% set is_me = p.user_id == current_user.id %}
       {% set correct = constituency.result and p.predicted_winner.strip().lower() == constituency.result.winner_name.strip().lower() %}
-      <tr class="{{ 'bg-indigo-50' if is_me else 'hover:bg-gray-50' }}">
-        <td class="px-4 py-3 font-medium">
-          {{ p.user.username }}{% if is_me %} <span class="text-xs text-indigo-400">(you)</span>{% endif %}
+      <tr class="{{ 'bg-red-50' if is_me else 'hover:bg-gray-50' }}">
+        <td class="px-4 py-3 font-medium text-gray-900">
+          {{ p.user.username }}{% if is_me %} <span class="text-xs text-red-400">(you)</span>{% endif %}
         </td>
-        <td class="px-4 py-3">{{ p.predicted_winner }}</td>
+        <td class="px-4 py-3 text-gray-800">{{ p.predicted_winner }}</td>
         <td class="px-4 py-3 text-right text-gray-600">
           {{ "%.1f%%"|format(p.predicted_vote_share) if p.predicted_vote_share is not none else "—" }}
         </td>
         <td class="px-4 py-3 text-gray-500 italic">{{ p.comment or "" }}</td>
         {% if constituency.result %}
-        <td class="px-4 py-3 text-center">
+        <td class="px-4 py-3 text-center font-bold {{ 'text-green-600' if correct else 'text-red-400' }}">
           {{ "✓" if correct else "✗" }}
         </td>
         {% endif %}

@@ -6,27 +6,41 @@
   <title>{% block title %}234 Seats{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/htmx.org@2.0.3/dist/htmx.min.js"></script>
+  <style>
+    /* Tailwind CDN doesn't pick up arbitrary values — define reusable tokens here */
+    .btn-primary {
+      @apply rounded-md bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 text-sm transition-colors;
+    }
+    .btn-secondary {
+      @apply rounded-md bg-gray-800 hover:bg-gray-900 text-white font-medium px-5 py-2 text-sm transition-colors;
+    }
+    .input-base {
+      @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500;
+    }
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">
 
-  <nav class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-    <a href="/" class="font-bold text-lg tracking-tight">234 Seats</a>
-    <div class="flex items-center gap-4 text-sm">
+  <nav class="bg-white border-b border-gray-200 px-4 sm:px-6 py-0 flex items-stretch">
+    <a href="/" class="flex items-center font-black text-xl tracking-tight text-red-600 py-3 pr-6 border-r border-gray-100 mr-6">
+      234 Seats
+    </a>
+    <div class="flex items-center gap-5 text-sm ml-auto">
       {% if current_user %}
-        <span class="text-gray-600">{{ current_user.username }}</span>
+        <span class="text-gray-500">{{ current_user.username }}</span>
         {% if current_user.is_admin %}
-          <a href="/admin" class="text-indigo-600 hover:underline">Admin</a>
+          <a href="/admin" class="text-gray-700 hover:text-red-600 transition-colors">Admin</a>
         {% endif %}
         <form method="post" action="/logout" class="inline">
-          <button type="submit" class="text-gray-500 hover:text-gray-900">Log out</button>
+          <button type="submit" class="text-gray-400 hover:text-gray-700 transition-colors py-3">Log out</button>
         </form>
       {% else %}
-        <a href="/login" class="text-indigo-600 hover:underline">Log in</a>
+        <a href="/login" class="text-red-600 hover:text-red-700 font-medium">Log in</a>
       {% endif %}
     </div>
   </nav>
 
-  <main class="max-w-5xl mx-auto px-4 py-8">
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
     {% block content %}{% endblock %}
   </main>
 

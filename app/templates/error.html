@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}{{ status_code }} — 234 Seats{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[50vh] text-center px-4">
+  <p class="text-7xl font-black text-red-600 mb-4">{{ status_code }}</p>
+  <h1 class="text-xl font-semibold text-gray-800 mb-2">{{ title }}</h1>
+  <p class="text-gray-500 text-sm mb-8 max-w-sm">{{ detail }}</p>
+  <a href="/" class="rounded-md bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 text-sm transition-colors">
+    Go home
+  </a>
+</div>
+{% endblock %}

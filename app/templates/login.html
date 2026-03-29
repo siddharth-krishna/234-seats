@@ -3,8 +3,9 @@
 {% block title %}Log in — 234 Seats{% endblock %}
 
 {% block content %}
-<div class="max-w-sm mx-auto mt-16">
-  <h1 class="text-2xl font-bold mb-6 text-center">Log in</h1>
+<div class="max-w-sm mx-auto mt-12 sm:mt-20">
+  <h1 class="text-2xl font-bold mb-1 text-center text-gray-900">Welcome back</h1>
+  <p class="text-sm text-gray-500 text-center mb-6">Sign in to submit and compare predictions</p>
 
   {% if error %}
     <div class="mb-4 rounded-md bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
@@ -12,26 +13,27 @@
     </div>
   {% endif %}
 
-  <form method="post" action="/login" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col gap-4">
+  <form method="post" action="/login"
+        class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col gap-4">
     <div>
-      <label for="username" class="block text-sm font-medium mb-1">Username</label>
+      <label for="username" class="block text-sm font-medium mb-1 text-gray-700">Username</label>
       <input
         id="username" name="username" type="text"
         required autofocus autocomplete="username"
-        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
       />
     </div>
     <div>
-      <label for="password" class="block text-sm font-medium mb-1">Password</label>
+      <label for="password" class="block text-sm font-medium mb-1 text-gray-700">Password</label>
       <input
         id="password" name="password" type="password"
         required autocomplete="current-password"
-        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
       />
     </div>
     <button
       type="submit"
-      class="w-full rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 text-sm transition-colors"
+      class="w-full rounded-md bg-red-600 hover:bg-red-700 text-white font-medium py-2 text-sm transition-colors"
     >
       Log in
     </button>
