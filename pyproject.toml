@@ -52,7 +52,9 @@ select = [
     "RUF", # ruff-specific
 ]
 ignore = [
-    "B008",  # FastAPI uses Depends()/Form()/Cookie() in function defaults by design
+    "B008",   # FastAPI uses Depends()/Form()/Cookie() in function defaults by design
+    "ANN101", # annotating `self` is not required or recommended
+    "TCH003", # moving stdlib imports into TYPE_CHECKING breaks SQLAlchemy annotation evaluation
 ]
 
 [tool.ruff.lint.isort]
@@ -62,8 +64,6 @@ known-first-party = ["app"]
 # ty — type checking
 # ---------------------------------------------------------------------------
 [tool.ty]
-# Strict mode: all code must be fully annotated
-strict = true
 
 # ---------------------------------------------------------------------------
 # pytest

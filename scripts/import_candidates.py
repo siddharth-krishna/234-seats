@@ -130,7 +130,7 @@ def scrape_constituency_ids() -> list[tuple[int, str]]:
     seen: set[int] = set()
     results: list[tuple[int, str]] = []
     for a in soup.find_all("a", href=re.compile(r"constituency_id=\d+")):
-        m = re.search(r"constituency_id=(\d+)", a["href"])
+        m = re.search(r"constituency_id=(\d+)", str(a["href"]))
         if not m:
             continue
         cid = int(m.group(1))

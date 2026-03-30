@@ -1,11 +1,18 @@
 """Prediction model — one user's prediction for one constituency."""
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Float, ForeignKey, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.constituency import Constituency
+    from app.models.user import User
 
 
 class Prediction(Base):
@@ -36,8 +43,8 @@ class Prediction(Base):
         DateTime, server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    user: Mapped["User"] = relationship(back_populates="predictions")  # type: ignore[name-defined]  # noqa: F821
-    constituency: Mapped["Constituency"] = relationship(back_populates="predictions")  # type: ignore[name-defined]  # noqa: F821
+    user: Mapped[User] = relationship(back_populates="predictions")
+    constituency: Mapped[Constituency] = relationship(back_populates="predictions")
 
     def __repr__(self) -> str:
         return (

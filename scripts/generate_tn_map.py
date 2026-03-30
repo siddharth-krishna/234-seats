@@ -122,7 +122,9 @@ def main() -> None:
 
         tn_items: list[dict] = []
         for i in range(len(r)):
-            rec = r.record(i).as_dict()
+            raw = r.record(i)
+            assert raw is not None
+            rec = raw.as_dict()
             if str(rec.get("ST_NAME", "")).upper() == "TAMIL NADU":
                 tn_items.append({"rec": rec, "shp": r.shape(i)})
 

@@ -1,11 +1,17 @@
 """Result model — actual election outcome for a constituency."""
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, Float, ForeignKey, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.constituency import Constituency
 
 
 class Result(Base):
@@ -28,7 +34,7 @@ class Result(Base):
         DateTime, server_default=func.now(), nullable=False
     )
 
-    constituency: Mapped["Constituency"] = relationship(back_populates="result")  # type: ignore[name-defined]  # noqa: F821
+    constituency: Mapped[Constituency] = relationship(back_populates="result")
 
     def __repr__(self) -> str:
         return (

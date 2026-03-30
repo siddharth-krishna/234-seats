@@ -1,7 +1,7 @@
 """Home page: leaderboard and constituency list."""
 
 from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -23,7 +23,7 @@ def home(
     dir: str = Query(default="desc"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_login),
-) -> HTMLResponse:
+) -> Response:
     """Render the home page with the leaderboard and constituency list."""
     election = db.query(Election).filter_by(active=True).first()
 

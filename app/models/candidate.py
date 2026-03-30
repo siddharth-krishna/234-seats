@@ -1,9 +1,16 @@
 """Candidate model — a candidate standing in a constituency."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.constituency import Constituency, Party
 
 
 class Candidate(Base):
@@ -25,8 +32,8 @@ class Candidate(Base):
     party_id: Mapped[int | None] = mapped_column(ForeignKey("parties.id"))
     name: Mapped[str] = mapped_column(String(200), nullable=False)
 
-    constituency: Mapped["Constituency"] = relationship(back_populates="candidates")  # type: ignore[name-defined]  # noqa: F821
-    party: Mapped["Party | None"] = relationship()  # type: ignore[name-defined]  # noqa: F821
+    constituency: Mapped[Constituency] = relationship(back_populates="candidates")
+    party: Mapped[Party | None] = relationship()
 
     def __repr__(self) -> str:
         return f"<Candidate id={self.id} name={self.name!r}>"

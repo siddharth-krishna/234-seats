@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
-import app.models
+import app.models as _models  # noqa: F401  # ensures all models are registered with Base
 from app.database import Base, get_db
 from app.main import app
 

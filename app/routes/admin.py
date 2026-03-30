@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -33,7 +33,7 @@ def admin_dashboard(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
-) -> HTMLResponse:
+) -> Response:
     """Admin dashboard: list all constituencies with management actions."""
     elections = db.query(Election).order_by(Election.year.desc()).all()
     active = next((e for e in elections if e.active), None)
@@ -63,7 +63,7 @@ def admin_seat(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
-) -> HTMLResponse:
+) -> Response:
     """Per-seat admin page: edit writeup and enter result."""
     constituency = _get_constituency_or_404(db, constituency_id)
     parties = db.query(Party).order_by(Party.name).all()
@@ -83,7 +83,7 @@ def open_predictions(
     request: Request,
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
-) -> HTMLResponse:
+) -> Response:
     """Open predictions for a seat. Returns an HTMX status badge or redirects."""
     c = _get_constituency_or_404(db, constituency_id)
     c.predictions_open = True
@@ -99,7 +99,7 @@ def close_predictions(
     request: Request,
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
-) -> HTMLResponse:
+) -> Response:
     """Close predictions for a seat."""
     c = _get_constituency_or_404(db, constituency_id)
     c.predictions_open = False
@@ -153,7 +153,7 @@ def save_writeup(
     writeup: str = Form(default=""),
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
-) -> HTMLResponse | RedirectResponse:
+) -> Response:
     """Save the writeup for a constituency."""
     c = _get_constituency_or_404(db, constituency_id)
     c.writeup = writeup.strip() or None
@@ -195,7 +195,7 @@ def parties_page(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin),
-) -> HTMLResponse:
+) -> Response:
     """List all parties with edit and delete controls."""
     parties = db.query(Party).order_by(Party.name).all()
     return templates.TemplateResponse(

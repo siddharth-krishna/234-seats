@@ -1,7 +1,7 @@
 """Constituency detail page and prediction submission."""
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -66,7 +66,7 @@ def constituency_page(
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_login),
-) -> HTMLResponse:
+) -> Response:
     """Render the constituency detail page."""
     constituency = _get_constituency_or_404(db, constituency_id)
     return templates.TemplateResponse(
@@ -83,7 +83,7 @@ def submit_prediction(
     comment: str = Form(default=""),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_login),
-) -> HTMLResponse:
+) -> Response:
     """Submit or update a prediction for a constituency."""
     constituency = _get_constituency_or_404(db, constituency_id)
 

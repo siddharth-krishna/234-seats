@@ -1,11 +1,17 @@
 """Election model — top-level container for a single election cycle."""
 
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.models.constituency import Constituency
 
 
 class Election(Base):
@@ -26,7 +32,7 @@ class Election(Base):
         DateTime, server_default=func.now(), nullable=False
     )
 
-    constituencies: Mapped[list["Constituency"]] = relationship(  # type: ignore[name-defined]  # noqa: F821
+    constituencies: Mapped[list[Constituency]] = relationship(
         back_populates="election", cascade="all, delete-orphan"
     )
 

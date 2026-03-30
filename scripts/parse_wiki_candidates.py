@@ -27,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 WIKI_URL = "https://en.wikipedia.org/wiki/2026_Tamil_Nadu_Legislative_Assembly_election"
 DEFAULT_HTML_CACHE = Path("/tmp/tn2026_wiki.html")
@@ -60,7 +60,7 @@ def fetch_or_load(html_path: Path) -> str:
     return html_path.read_text(encoding="utf-8")
 
 
-def find_candidates_table(soup: BeautifulSoup) -> BeautifulSoup:
+def find_candidates_table(soup: BeautifulSoup) -> Tag:
     """Return the wikitable that contains SPA / AIADMK+ candidate columns."""
     for table in soup.find_all("table", class_="wikitable"):
         if "SPA" in table.get_text():
@@ -68,7 +68,7 @@ def find_candidates_table(soup: BeautifulSoup) -> BeautifulSoup:
     raise ValueError("Candidates table not found in the Wikipedia page.")
 
 
-def parse_table(table: BeautifulSoup) -> list[dict]:
+def parse_table(table: Tag) -> list[dict]:
     """Parse all 234 data rows; return list of dicts."""
     rows = table.find_all("tr")
     records: list[dict] = []
