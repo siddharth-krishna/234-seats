@@ -48,7 +48,7 @@ new-migration msg:
 
 # Seed the database with constituency data
 seed:
-    python scripts/seed_constituencies.py
+    python scripts/seed_database.py
 
 # Drop and recreate the database from scratch (dev only)
 reset-db:
