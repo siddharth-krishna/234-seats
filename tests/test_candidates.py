@@ -33,7 +33,7 @@ def seat(db: Session, election: Election) -> Constituency:
 
 @pytest.fixture()
 def party(db: Session) -> Party:
-    p = Party(name="DMK", abbreviation="DMK", color_hex="#e63946")
+    p = Party(name="DMK", abbreviation="DMK", alliance="SPA", color_hex="#e63946")
     db.add(p)
     db.flush()
     return p
@@ -117,6 +117,24 @@ def test_delete_candidate_wrong_seat_returns_404(
     assert r.status_code == 404
 
 
+def test_update_candidate_name_and_party(
+    client: TestClient, admin: User, seat: Constituency, party: Party, db: Session
+) -> None:
+    other_party = Party(name="AIADMK", abbreviation="AIADMK", alliance="AIADMK+")
+    candidate = Candidate(constituency_id=seat.id, name="Old Name", party_id=party.id)
+    db.add_all([other_party, candidate])
+    db.commit()
+    auth(client, admin)
+    r = client.post(
+        f"/admin/seat/{seat.id}/candidates/{candidate.id}",
+        data={"name": "New Name", "party_id": str(other_party.id)},
+    )
+    assert r.status_code == 302
+    db.refresh(candidate)
+    assert candidate.name == "New Name"
+    assert candidate.party_id == other_party.id
+
+
 def test_add_candidate_requires_admin(
     client: TestClient, user: User, seat: Constituency, db: Session
 ) -> None:
@@ -144,7 +162,7 @@ def test_prediction_form_shows_dropdown_when_candidates_exist(
     assert r.status_code == 200
     assert "<select" in r.text
     assert "Alice Kumar" in r.text
-    assert "DMK" in r.text
+    assert "(DMK, SPA)" in r.text
 
 
 def test_prediction_form_shows_text_input_without_candidates(

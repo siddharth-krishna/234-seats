@@ -24,6 +24,7 @@ class Party(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
     abbreviation: Mapped[str] = mapped_column(String(20), nullable=False)
+    alliance: Mapped[str | None] = mapped_column(String(100))
     color_hex: Mapped[str] = mapped_column(String(7), default="#cccccc", nullable=False)
 
     constituencies: Mapped[list[Constituency]] = relationship(back_populates="current_party_rel")

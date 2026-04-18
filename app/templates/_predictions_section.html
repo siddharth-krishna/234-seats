@@ -22,7 +22,7 @@
         <option value="">Select candidate…</option>
         {% for c in candidates %}
           <option value="{{ c.name }}">
-            {{ c.name }}{% if c.party %} — {{ c.party.abbreviation }}{% endif %}
+            {{ c.name }}{% if c.party %} ({{ c.party.abbreviation }}{% if c.party.alliance %}, {{ c.party.alliance }}{% endif %}){% endif %}
           </option>
         {% endfor %}
       </select>

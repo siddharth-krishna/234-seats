@@ -209,6 +209,7 @@ def parties_page(
 def create_party(
     name: str = Form(...),
     abbreviation: str = Form(...),
+    alliance: str = Form(default=""),
     color_hex: str = Form(default="#cccccc"),
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
@@ -218,7 +219,14 @@ def create_party(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Party name already exists"
         )
-    db.add(Party(name=name.strip(), abbreviation=abbreviation.strip(), color_hex=color_hex))
+    db.add(
+        Party(
+            name=name.strip(),
+            abbreviation=abbreviation.strip(),
+            alliance=alliance.strip() or None,
+            color_hex=color_hex,
+        )
+    )
     db.commit()
     return RedirectResponse(url="/admin/parties", status_code=status.HTTP_302_FOUND)
 
@@ -228,6 +236,7 @@ def update_party(
     party_id: int,
     name: str = Form(...),
     abbreviation: str = Form(...),
+    alliance: str = Form(default=""),
     color_hex: str = Form(default="#cccccc"),
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
@@ -238,6 +247,7 @@ def update_party(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     party.name = name.strip()
     party.abbreviation = abbreviation.strip()
+    party.alliance = alliance.strip() or None
     party.color_hex = color_hex
     db.commit()
     return RedirectResponse(url="/admin/parties", status_code=status.HTTP_302_FOUND)
@@ -281,6 +291,25 @@ def add_candidate(
             party_id=resolved_party_id,
         )
     )
+    db.commit()
+    return RedirectResponse(url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND)
+
+
+@router.post("/seat/{constituency_id}/candidates/{candidate_id}")
+def update_candidate(
+    constituency_id: int,
+    candidate_id: int,
+    name: str = Form(...),
+    party_id: str = Form(default=""),
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> RedirectResponse:
+    """Update a candidate's name and party."""
+    candidate = db.get(Candidate, candidate_id)
+    if candidate is None or candidate.constituency_id != constituency_id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    candidate.name = name.strip()
+    candidate.party_id = int(party_id) if party_id.strip() else None
     db.commit()
     return RedirectResponse(url=f"/admin/seat/{constituency_id}", status_code=status.HTTP_302_FOUND)
 

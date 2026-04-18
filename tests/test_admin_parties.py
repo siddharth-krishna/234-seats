@@ -54,11 +54,12 @@ def test_create_party(client: TestClient, admin: User, db: Session) -> None:
     auth(client, admin)
     r = client.post(
         "/admin/parties",
-        data={"name": "DMK", "abbreviation": "DMK", "color_hex": "#e63946"},
+        data={"name": "DMK", "abbreviation": "DMK", "alliance": "SPA", "color_hex": "#e63946"},
     )
     assert r.status_code == 302
     party = db.query(Party).filter_by(name="DMK").first()
     assert party is not None
+    assert party.alliance == "SPA"
     assert party.color_hex == "#e63946"
 
 
@@ -67,7 +68,8 @@ def test_create_duplicate_party_returns_409(client: TestClient, admin: User, db:
     db.commit()
     auth(client, admin)
     r = client.post(
-        "/admin/parties", data={"name": "DMK", "abbreviation": "DMK", "color_hex": "#000"}
+        "/admin/parties",
+        data={"name": "DMK", "abbreviation": "DMK", "alliance": "", "color_hex": "#000"},
     )
     assert r.status_code == 409
 
@@ -76,13 +78,13 @@ def test_create_duplicate_party_returns_409(client: TestClient, admin: User, db:
 
 
 def test_update_party(client: TestClient, admin: User, db: Session) -> None:
-    party = Party(name="DMK", abbreviation="DMK", color_hex="#aaaaaa")
+    party = Party(name="DMK", abbreviation="DMK", alliance="SPA", color_hex="#aaaaaa")
     db.add(party)
     db.commit()
     auth(client, admin)
     client.post(
         f"/admin/parties/{party.id}",
-        data={"name": "DMK", "abbreviation": "DMK", "color_hex": "#e63946"},
+        data={"name": "DMK", "abbreviation": "DMK", "alliance": "SPA", "color_hex": "#e63946"},
     )
     db.refresh(party)
     assert party.color_hex == "#e63946"
@@ -95,11 +97,17 @@ def test_update_party_name_and_abbreviation(client: TestClient, admin: User, db:
     auth(client, admin)
     client.post(
         f"/admin/parties/{party.id}",
-        data={"name": "New Name", "abbreviation": "NEW", "color_hex": "#cccccc"},
+        data={
+            "name": "New Name",
+            "abbreviation": "NEW",
+            "alliance": "AIADMK+",
+            "color_hex": "#cccccc",
+        },
     )
     db.refresh(party)
     assert party.name == "New Name"
     assert party.abbreviation == "NEW"
+    assert party.alliance == "AIADMK+"
 
 
 def test_update_nonexistent_party_returns_404(client: TestClient, admin: User, db: Session) -> None:
@@ -108,7 +116,7 @@ def test_update_nonexistent_party_returns_404(client: TestClient, admin: User, d
     assert (
         client.post(
             "/admin/parties/9999",
-            data={"name": "X", "abbreviation": "X", "color_hex": "#000"},
+            data={"name": "X", "abbreviation": "X", "alliance": "", "color_hex": "#000"},
         ).status_code
         == 404
     )

@@ -69,12 +69,13 @@ def test_election_constituency_relationship(db: Session) -> None:
 
 def test_party_created(db: Session) -> None:
     """Party is persisted with required fields."""
-    party = Party(name="DMK", abbreviation="DMK", color_hex="#e63946")
+    party = Party(name="DMK", abbreviation="DMK", alliance="SPA", color_hex="#e63946")
     db.add(party)
     db.commit()
     fetched = db.get(Party, party.id)
     assert fetched is not None
     assert fetched.abbreviation == "DMK"
+    assert fetched.alliance == "SPA"
 
 
 # ── Constituency ──────────────────────────────────────────────────────────────

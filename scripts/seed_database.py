@@ -63,16 +63,18 @@ def seed_parties(db: object) -> dict[str, Party]:
     for row in rows:
         name = row["name"].strip()
         abbrev = row["abbreviation"].strip()
+        alliance = row.get("alliance", "").strip() or None
         color = row["color_hex"].strip()
 
         party = db.query(Party).filter_by(name=name).first()
         if party is None:
-            party = Party(name=name, abbreviation=abbrev, color_hex=color)
+            party = Party(name=name, abbreviation=abbrev, alliance=alliance, color_hex=color)
             db.add(party)
             db.flush()
             created += 1
         else:
             party.abbreviation = abbrev
+            party.alliance = alliance
             party.color_hex = color
             updated += 1
 

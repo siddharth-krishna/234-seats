@@ -24,21 +24,45 @@
     {% if constituency.candidates %}
     <ul class="divide-y divide-gray-100 mb-5">
       {% for c in constituency.candidates %}
-      <li class="flex items-center justify-between py-2.5">
-        <div class="flex items-center gap-3">
-          {% if c.party %}
-            <span class="inline-block w-2.5 h-2.5 rounded-sm shrink-0"
-                  style="background: {{ c.party.color_hex }}"></span>
-            <span class="font-medium text-sm">{{ c.name }}</span>
-            <span class="text-xs text-gray-400">({{ c.party.abbreviation }})</span>
-          {% else %}
-            <span class="inline-block w-2.5 h-2.5 rounded-sm shrink-0 bg-gray-200"></span>
-            <span class="font-medium text-sm">{{ c.name }}</span>
-            <span class="text-xs text-gray-400">Independent</span>
-          {% endif %}
-        </div>
+      <li class="py-3">
+        <form method="post" action="/admin/seat/{{ constituency.id }}/candidates/{{ c.id }}"
+              class="flex flex-wrap items-end gap-3">
+          <div class="flex items-center gap-2 mr-1">
+            <span class="inline-block w-2.5 h-2.5 rounded-sm shrink-0 {{ 'bg-gray-200' if not c.party }}"
+                  {% if c.party %}style="background: {{ c.party.color_hex }}"{% endif %}></span>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1" for="cand_name_{{ c.id }}">
+              Name
+            </label>
+            <input id="cand_name_{{ c.id }}" name="name" type="text" required value="{{ c.name }}"
+                   class="rounded-md border border-gray-300 px-3 py-2 text-sm w-52
+                          focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1" for="cand_party_{{ c.id }}">
+              Party
+            </label>
+            <select id="cand_party_{{ c.id }}" name="party_id"
+                    class="rounded-md border border-gray-300 px-3 py-2 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="" {{ 'selected' if not c.party }}>Independent / Unknown</option>
+              {% for p in parties %}
+                <option value="{{ p.id }}" {{ 'selected' if c.party_id == p.id }}>
+                  {{ p.name }} ({{ p.abbreviation }}){% if p.alliance %} · {{ p.alliance }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit"
+                  class="rounded-md bg-gray-800 hover:bg-gray-900 text-white
+                         font-medium px-4 py-2 text-sm transition-colors">
+            Save
+          </button>
+        </form>
         <form method="post"
-              action="/admin/seat/{{ constituency.id }}/candidates/{{ c.id }}/delete">
+              action="/admin/seat/{{ constituency.id }}/candidates/{{ c.id }}/delete"
+              class="mt-2">
           <button type="submit" class="text-xs text-red-400 hover:text-red-600">Remove</button>
         </form>
       </li>
@@ -66,7 +90,7 @@
                        focus:outline-none focus:ring-2 focus:ring-indigo-500">
           <option value="">Independent / Unknown</option>
           {% for p in parties %}
-            <option value="{{ p.id }}">{{ p.name }} ({{ p.abbreviation }})</option>
+            <option value="{{ p.id }}">{{ p.name }} ({{ p.abbreviation }}){% if p.alliance %} · {{ p.alliance }}{% endif %}</option>
           {% endfor %}
         </select>
       </div>

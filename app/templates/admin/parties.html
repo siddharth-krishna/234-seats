@@ -24,6 +24,11 @@
              class="rounded-md border border-gray-300 px-3 py-2 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
     </div>
     <div>
+      <label class="block text-xs font-medium text-gray-600 mb-1" for="new_alliance">Alliance</label>
+      <input id="new_alliance" name="alliance" type="text" placeholder="SPA"
+             class="rounded-md border border-gray-300 px-3 py-2 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+    <div>
       <label class="block text-xs font-medium text-gray-600 mb-1" for="new_color">Colour</label>
       <div class="flex items-center gap-2">
         <input id="new_color" name="color_hex" type="color" value="#cccccc"
@@ -65,6 +70,11 @@
           <label class="block text-xs font-medium text-gray-600 mb-1">Abbreviation</label>
           <input name="abbreviation" type="text" required value="{{ p.abbreviation }}" maxlength="20"
                  class="rounded-md border border-gray-300 px-3 py-2 text-sm w-28 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Alliance</label>
+          <input name="alliance" type="text" value="{{ p.alliance or '' }}"
+                 class="rounded-md border border-gray-300 px-3 py-2 text-sm w-40 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-600 mb-1">Colour</label>
