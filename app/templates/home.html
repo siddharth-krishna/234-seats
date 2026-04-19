@@ -33,7 +33,7 @@
         <span class="inline-block w-3 h-3 rounded-sm bg-red-500"></span> Results declared
       </span>
       <span class="flex items-center gap-1.5">
-        <span class="inline-block w-3 h-3 rounded-sm bg-gray-300"></span> Closed
+        <span class="inline-block w-3 h-3 rounded-sm bg-gray-700"></span> Closed
       </span>
     </div>
 
@@ -84,28 +84,28 @@
         </thead>
         <tbody class="divide-y divide-gray-100">
           {% for s in scores %}
-          <tr class="{% if s.user_id == current_user.id %}bg-red-50{% else %}hover:bg-gray-50{% endif %}">
-            <td class="px-4 py-3 text-gray-400 tabular-nums">{{ loop.index }}</td>
-            <td class="px-4 py-3 font-medium text-gray-900">
+          <tr class="{% if s.user_id == current_user.id %}bg-red-800 text-white{% else %}hover:bg-gray-50{% endif %}">
+            <td class="px-4 py-3 {{ 'text-red-100' if s.user_id == current_user.id else 'text-gray-400' }} tabular-nums">{{ loop.index }}</td>
+            <td class="px-4 py-3 font-medium {{ 'text-white' if s.user_id == current_user.id else 'text-gray-900' }}">
               {{ s.username }}
               {% if s.user_id == current_user.id %}
-                <span class="ml-1 text-xs text-red-400">(you)</span>
+                <span class="ml-1 text-xs text-red-100">(you)</span>
               {% endif %}
             </td>
-            <td class="px-4 py-3 text-right text-gray-700 tabular-nums">
+            <td class="px-4 py-3 text-right {{ 'text-red-50' if s.user_id == current_user.id else 'text-gray-700' }} tabular-nums">
               {{ s.num_predictions }}{% if open_seats_count %} / {{ open_seats_count }}{% endif %}
             </td>
-            <td class="px-4 py-3 text-right font-semibold text-gray-800 tabular-nums">
+            <td class="px-4 py-3 text-right font-semibold {{ 'text-white' if s.user_id == current_user.id else 'text-gray-800' }} tabular-nums">
               {% if s.seats_with_results > 0 %}
                 {{ s.correct_seats }} / {{ s.seats_with_results }}
               {% else %}
-                <span class="text-gray-300">—</span>
+                <span class="{{ 'text-red-200' if s.user_id == current_user.id else 'text-gray-300' }}">—</span>
               {% endif %}
             </td>
-            <td class="px-4 py-3 text-right text-gray-600 tabular-nums">
+            <td class="px-4 py-3 text-right {{ 'text-red-100' if s.user_id == current_user.id else 'text-gray-600' }} tabular-nums">
               {{ "%.2f"|format(s.vote_share_mae) if s.vote_share_mae is not none else "—" }}
             </td>
-            <td class="px-4 py-3 text-right text-gray-600 tabular-nums">
+            <td class="px-4 py-3 text-right {{ 'text-red-100' if s.user_id == current_user.id else 'text-gray-600' }} tabular-nums">
               {{ "%.2f"|format(s.vote_share_rmse) if s.vote_share_rmse is not none else "—" }}
             </td>
           </tr>
@@ -196,7 +196,7 @@
     open:          "#4ade80",   // green-400
     openPredicted: "#15803d",   // green-700
     result:        "#ef4444",   // red-500
-    closed:        "#d1d5db",   // gray-300
+    closed:        "#374151",   // gray-700
     hover:         "#fca5a5",   // red-300
   };
 

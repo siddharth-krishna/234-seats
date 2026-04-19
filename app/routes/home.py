@@ -1,7 +1,7 @@
-"""Home page: leaderboard and constituency list."""
+"""Home page: leaderboard, theme toggle, and constituency list."""
 
-from fastapi import APIRouter, Depends, Query, Request
-from fastapi.responses import HTMLResponse, Response
+from fastapi import APIRouter, Cookie, Depends, Form, Query, Request, status
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -14,6 +14,9 @@ from app.services.scoring import SORT_KEYS, compute_scores, sort_scores
 from app.templates_config import templates
 
 router = APIRouter()
+
+THEME_COOKIE_NAME = "theme"
+THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 
 def _constituency_sort_key(
@@ -35,6 +38,24 @@ def _constituency_sort_key(
             f"{constituency.result.winner_name.lower()}|{constituency.result.winner_party.lower()}"
         )
     return constituency.name.lower()
+
+
+@router.post("/theme")
+def toggle_theme(
+    next_url: str = Form(default="/", alias="next"),
+    current_theme: str | None = Cookie(default=None, alias=THEME_COOKIE_NAME),
+) -> RedirectResponse:
+    """Toggle the user's theme preference and redirect back."""
+    next_theme = "light" if current_theme == "dark" else "dark"
+    redirect = RedirectResponse(url=next_url, status_code=status.HTTP_302_FOUND)
+    redirect.set_cookie(
+        key=THEME_COOKIE_NAME,
+        value=next_theme,
+        max_age=THEME_COOKIE_MAX_AGE,
+        httponly=True,
+        samesite="lax",
+    )
+    return redirect
 
 
 @router.get("/", response_class=HTMLResponse)
