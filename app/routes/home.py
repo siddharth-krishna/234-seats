@@ -16,11 +16,34 @@ from app.templates_config import templates
 router = APIRouter()
 
 
+def _constituency_sort_key(
+    constituency: Constituency,
+    predicted_ids: set[int],
+    sort_by: str,
+) -> str | int:
+    """Return the sort key for a constituency row."""
+    if sort_by == "district":
+        return constituency.district.lower()
+    if sort_by == "status":
+        return 0 if constituency.predictions_open else 1
+    if sort_by == "predicted":
+        return 0 if constituency.id in predicted_ids else 1
+    if sort_by == "result":
+        if constituency.result is None:
+            return "zzz"
+        return (
+            f"{constituency.result.winner_name.lower()}|{constituency.result.winner_party.lower()}"
+        )
+    return constituency.name.lower()
+
+
 @router.get("/", response_class=HTMLResponse)
 def home(
     request: Request,
     sort: str = Query(default="correct_seats"),
     dir: str = Query(default="desc"),
+    seat_sort: str = Query(default="name"),
+    seat_dir: str = Query(default="asc"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_login),
 ) -> Response:
@@ -44,15 +67,24 @@ def home(
 
     # Set of constituency numbers the current user has already predicted on
     predicted_numbers: set[int] = set()
+    predicted_ids: set[int] = set()
     if election is not None:
-        predicted_numbers = {
-            p.constituency.number
-            for p in db.query(Prediction)
+        user_predictions = (
+            db.query(Prediction)
             .filter_by(user_id=current_user.id)
             .join(Constituency)
             .filter(Constituency.election_id == election.id)
             .all()
-        }
+        )
+        predicted_numbers = {p.constituency.number for p in user_predictions}
+        predicted_ids = {p.constituency_id for p in user_predictions}
+
+    seat_descending = seat_dir == "desc"
+    sorted_constituencies = sorted(
+        constituencies,
+        key=lambda c: (_constituency_sort_key(c, predicted_ids, seat_sort), c.name.lower()),
+        reverse=seat_descending,
+    )
 
     # Map data for SVG colour-coding keyed by constituency number (AC_NO)
     map_data = {
@@ -73,11 +105,13 @@ def home(
             "current_user": current_user,
             "election": election,
             "scores": scores,
-            "constituencies": constituencies,
+            "constituencies": sorted_constituencies,
             "open_seats_count": open_seats_count,
             "map_data": map_data,
             "sort": sort,
             "dir": dir,
+            "seat_sort": seat_sort,
+            "seat_dir": seat_dir,
             "sort_keys": list(SORT_KEYS.keys()),
         },
     )

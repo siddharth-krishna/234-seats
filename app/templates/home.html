@@ -120,54 +120,68 @@
 
 </div>
 
-{# ── Constituency list (alphabetical) ─────────────────────────────────────── #}
+{# ── Constituency table ────────────────────────────────────────────────────── #}
 <section>
   <h2 class="text-base font-semibold text-gray-700 uppercase tracking-wide mb-4">All Constituencies</h2>
-
-  {% set sorted_constituencies = constituencies | sort(attribute="name") %}
-
-  {# Group into open / closed / results for the grid header rows #}
-  {% set open_seats    = sorted_constituencies | selectattr("predictions_open") | list %}
-  {% set results_seats = sorted_constituencies | rejectattr("predictions_open") | selectattr("result") | list %}
-  {% set closed_seats  = sorted_constituencies | rejectattr("predictions_open") | rejectattr("result") | list %}
-
-  {% for group_label, group_color, group_seats in [
-      ("Open for predictions", "text-green-700", open_seats),
-      ("Results declared",     "text-gray-600",  results_seats),
-      ("Closed",               "text-gray-500",  closed_seats),
+  {% if constituencies %}
+  {% set seat_cols = [
+    ("name", "Constituency", "text-left"),
+    ("district", "District", "text-left"),
+    ("status", "Open/Closed", "text-left"),
+    ("predicted", "Predicted", "text-center"),
+    ("result", "Results", "text-left"),
   ] %}
-    {% if group_seats %}
-    <h3 class="text-xs font-semibold {{ group_color }} uppercase tracking-wide mt-5 mb-2">
-      {{ group_label }} ({{ group_seats | length }})
-    </h3>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-      {% for c in group_seats %}
-      <a href="/seat/{{ c.id }}"
-         class="rounded-lg border px-3 py-2 text-sm transition-colors
-                {% if c.predictions_open %}
-                  border-green-200 bg-green-50 hover:bg-green-100
-                {% elif c.result %}
-                  border-gray-200 bg-white hover:bg-gray-50
-                {% else %}
-                  border-gray-200 bg-gray-50 hover:bg-gray-100
-                {% endif %}">
-        <span class="font-medium
-          {% if c.predictions_open %}text-green-900
-          {% else %}text-gray-700{% endif %}">{{ c.name }}</span>
-        <span class="block text-xs
-          {% if c.predictions_open %}text-green-600
-          {% else %}text-gray-400{% endif %}">{{ c.district }}</span>
-        {% if c.result %}
-          <span class="block text-xs font-medium text-gray-600 mt-0.5">{{ c.result.winner_name }}</span>
-        {% endif %}
-      </a>
-      {% endfor %}
-    </div>
-    {% endif %}
-  {% endfor %}
-
-  {% if not constituencies %}
-    <p class="text-gray-400 text-sm">No constituencies loaded yet. Run <code>just seed</code>.</p>
+  <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+    <table class="min-w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 uppercase text-xs tracking-wide">
+        <tr>
+          {% for key, label, align in seat_cols %}
+            {% set next_dir = "desc" if (seat_sort == key and seat_dir == "asc") else "asc" %}
+            <th class="px-4 py-3 {{ align }}">
+              <a href="/?sort={{ sort }}&dir={{ dir }}&seat_sort={{ key }}&seat_dir={{ next_dir }}"
+                 class="hover:text-red-600 {% if seat_sort == key %}text-red-600 font-bold{% endif %}">
+                {{ label }}
+                {% if seat_sort == key %}{{ "↑" if seat_dir == "asc" else "↓" }}{% endif %}
+              </a>
+            </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for c in constituencies %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 font-medium text-gray-900">
+            <a href="/seat/{{ c.id }}" class="text-red-600 hover:text-red-700 hover:underline">
+              {{ c.name }}
+            </a>
+          </td>
+          <td class="px-4 py-3 text-gray-700">{{ c.district }}</td>
+          <td class="px-4 py-3">
+            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold
+              {{ 'bg-green-100 text-green-800' if c.predictions_open else 'bg-gray-100 text-gray-500' }}">
+              {{ "Open" if c.predictions_open else "Closed" }}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-center">
+            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold
+              {{ 'bg-red-50 text-red-700' if map_data[c.number].predicted else 'bg-gray-100 text-gray-400' }}">
+              {{ "Yes" if map_data[c.number].predicted else "No" }}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-gray-700">
+            {% if c.result %}
+              {{ c.result.winner_name }} ({{ c.result.winner_party }})
+            {% else %}
+              <span class="text-gray-400">TBD</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-gray-400 text-sm">No constituencies loaded yet. Run <code>just seed</code>.</p>
   {% endif %}
 </section>
 
