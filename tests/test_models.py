@@ -85,11 +85,13 @@ def test_constituency_created(db: Session) -> None:
     """Constituency is persisted with election relationship."""
     election = make_election(db)
     c = make_constituency(db, election)
+    c.image_url = "https://example.com/seat.jpg"
     db.commit()
     fetched = db.get(Constituency, c.id)
     assert fetched is not None
     assert fetched.election_id == election.id
     assert fetched.predictions_open is True
+    assert fetched.image_url == "https://example.com/seat.jpg"
 
 
 # ── User ──────────────────────────────────────────────────────────────────────

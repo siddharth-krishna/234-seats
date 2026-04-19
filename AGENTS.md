@@ -68,6 +68,7 @@ python -m pytest -k "test_login"       # run tests matching a pattern
 ```
 
 **Always run tests after making code changes.** All 70 tests must pass before committing.
+**Always run pre-commit after making code changes and before finishing the task.**
 
 ## Other Dev Commands
 
@@ -75,6 +76,7 @@ python -m pytest -k "test_login"       # run tests matching a pattern
 just dev      # start dev server with auto-reload at http://localhost:8000
 just lint     # ruff check + ruff format --check + ty check
 just fix      # auto-fix lint/format issues (ruff only)
+just precommit # run all configured pre-commit hooks
 just migrate  # apply pending Alembic migrations
 just seed     # seed constituency data from scripts/seed_constituencies.py
 just create-user alice pw123 --admin   # create a user account

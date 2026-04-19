@@ -38,8 +38,18 @@
 </div>
 
 {% if constituency.writeup %}
-<div class="mb-8 p-4 bg-white rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed max-w-2xl whitespace-pre-line">
-  {{ constituency.writeup }}
+<div class="mb-8 p-4 bg-white rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed max-w-2xl prose prose-sm prose-red max-w-none">
+  {{ constituency.writeup|markdown }}
+</div>
+{% endif %}
+
+{% if constituency.image_url %}
+<div class="mb-8 max-w-3xl">
+  <img src="{{ constituency.image_url }}"
+       alt="{{ constituency.name }} constituency image"
+       loading="lazy"
+       referrerpolicy="no-referrer"
+       class="w-full rounded-xl border border-gray-200 bg-white object-cover shadow-sm" />
 </div>
 {% endif %}
 

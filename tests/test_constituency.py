@@ -84,6 +84,30 @@ def test_constituency_page_shows_form_when_open(
     assert "predicted_winner" in r.text
 
 
+def test_constituency_page_renders_writeup_markdown(
+    client: TestClient, user: User, open_seat: Constituency, db: Session
+) -> None:
+    """Markdown writeups render as HTML on the seat page."""
+    open_seat.writeup = "## Key fight\n\n**DMK** vs *AIADMK*"
+    db.commit()
+    logged_in_client(client, user)
+    r = client.get(f"/seat/{open_seat.id}")
+    assert "<h2>Key fight</h2>" in r.text
+    assert "<strong>DMK</strong>" in r.text
+    assert "<em>AIADMK</em>" in r.text
+
+
+def test_constituency_page_shows_remote_image(
+    client: TestClient, user: User, open_seat: Constituency, db: Session
+) -> None:
+    """Seat page shows a configured remote image URL."""
+    open_seat.image_url = "https://example.com/seat.jpg"
+    db.commit()
+    logged_in_client(client, user)
+    r = client.get(f"/seat/{open_seat.id}")
+    assert 'src="https://example.com/seat.jpg"' in r.text
+
+
 def test_constituency_page_hides_others_before_submission(
     client: TestClient, user: User, other_user: User, open_seat: Constituency, db: Session
 ) -> None:

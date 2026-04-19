@@ -174,9 +174,13 @@ def test_save_writeup(client: TestClient, admin: User, seat: Constituency, db: S
     """Admin can save a writeup for a seat."""
     db.commit()
     auth(client, admin)
-    client.post(f"/admin/seat/{seat.id}/writeup", data={"writeup": "Some context here."})
+    client.post(
+        f"/admin/seat/{seat.id}/writeup",
+        data={"writeup": "Some context here.", "image_url": "https://example.com/seat.jpg"},
+    )
     db.refresh(seat)
     assert seat.writeup == "Some context here."
+    assert seat.image_url == "https://example.com/seat.jpg"
 
 
 def test_save_empty_writeup_stores_none(
@@ -184,8 +188,10 @@ def test_save_empty_writeup_stores_none(
 ) -> None:
     """Saving an empty writeup stores None."""
     seat.writeup = "Old writeup"
+    seat.image_url = "https://example.com/old.jpg"
     db.commit()
     auth(client, admin)
-    client.post(f"/admin/seat/{seat.id}/writeup", data={"writeup": "   "})
+    client.post(f"/admin/seat/{seat.id}/writeup", data={"writeup": "   ", "image_url": "   "})
     db.refresh(seat)
     assert seat.writeup is None
+    assert seat.image_url is None

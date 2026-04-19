@@ -24,6 +24,10 @@ fix:
     ruff check --fix .
     ruff format .
 
+# Run all pre-commit hooks
+precommit:
+    pre-commit run --all-files
+
 # ── Tests ─────────────────────────────────────────────────────────────────────
 
 # Run the test suite

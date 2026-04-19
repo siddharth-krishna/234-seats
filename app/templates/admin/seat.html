@@ -207,12 +207,29 @@
       <div>
         <label class="block text-sm font-medium mb-1" for="writeup">
           Background and context
-          <span class="text-gray-400 font-normal">(shown on the constituency page)</span>
+          <span class="text-gray-400 font-normal">(shown on the constituency page as Markdown)</span>
         </label>
+        <p class="mb-2 text-xs text-gray-500">
+          Markdown is supported.
+          <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:underline">
+            Syntax help
+          </a>
+        </p>
         <textarea id="writeup" name="writeup" rows="10"
                   placeholder="History of the seat, key candidates, notable issues…"
                   class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono
                          focus:outline-none focus:ring-2 focus:ring-indigo-500">{{ constituency.writeup or "" }}</textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" for="image_url">
+          Image URL
+          <span class="text-gray-400 font-normal">(optional, shown between the writeup and prediction box)</span>
+        </label>
+        <input id="image_url" name="image_url" type="url"
+               placeholder="https://example.com/seat-photo.jpg"
+               value="{{ constituency.image_url or '' }}"
+               class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div class="flex items-center gap-4">
         <button type="submit"

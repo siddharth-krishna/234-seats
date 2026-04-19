@@ -151,12 +151,14 @@ def save_writeup(
     constituency_id: int,
     request: Request,
     writeup: str = Form(default=""),
+    image_url: str = Form(default=""),
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ) -> Response:
     """Save the writeup for a constituency."""
     c = _get_constituency_or_404(db, constituency_id)
     c.writeup = writeup.strip() or None
+    c.image_url = image_url.strip() or None
     db.commit()
     if request.headers.get("HX-Request"):
         saved_at = datetime.now(tz=UTC).strftime("%H:%M")

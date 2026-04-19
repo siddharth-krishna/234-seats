@@ -52,6 +52,7 @@ class Constituency(Base):
     current_mla: Mapped[str | None] = mapped_column(String(200))
     current_party_id: Mapped[int | None] = mapped_column(ForeignKey("parties.id"))
     writeup: Mapped[str | None] = mapped_column(Text)
+    image_url: Mapped[str | None] = mapped_column(String(500))
     predictions_open: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     election: Mapped[Election] = relationship(back_populates="constituencies")

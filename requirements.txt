@@ -9,3 +9,4 @@ python-multipart>=0.0.9
 pydantic-settings>=2.3
 aiofiles>=24.1
 python-dotenv>=0.8
+markdown>=3.7
