@@ -17,6 +17,65 @@
     .input-base {
       @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500;
     }
+    .markdown-content h1,
+    .markdown-content h2,
+    .markdown-content h3,
+    .markdown-content h4,
+    .markdown-content h5,
+    .markdown-content h6 {
+      color: rgb(17 24 39);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-top: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .markdown-content h1 { font-size: 1.875rem; }
+    .markdown-content h2 { font-size: 1.5rem; }
+    .markdown-content h3 { font-size: 1.25rem; }
+    .markdown-content p,
+    .markdown-content ul,
+    .markdown-content ol,
+    .markdown-content blockquote,
+    .markdown-content pre {
+      margin: 0.75rem 0;
+    }
+    .markdown-content ul,
+    .markdown-content ol {
+      padding-left: 1.5rem;
+    }
+    .markdown-content ul {
+      list-style: disc;
+    }
+    .markdown-content ol {
+      list-style: decimal;
+    }
+    .markdown-content a {
+      color: rgb(220 38 38);
+      text-decoration: underline;
+    }
+    .markdown-content blockquote {
+      border-left: 3px solid rgb(229 231 235);
+      padding-left: 1rem;
+      color: rgb(75 85 99);
+    }
+    .markdown-content code {
+      background: rgb(243 244 246);
+      border-radius: 0.25rem;
+      padding: 0.1rem 0.3rem;
+      font-size: 0.875em;
+    }
+    .markdown-content pre {
+      background: rgb(17 24 39);
+      color: rgb(249 250 251);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    .markdown-content pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900 min-h-screen">

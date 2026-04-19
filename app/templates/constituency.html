@@ -23,22 +23,10 @@
     </span>
   </div>
 
-  {% if constituency.current_mla or constituency.current_party_rel %}
-  <p class="mt-3 text-sm text-gray-600">
-    Current MLA:
-    <span class="font-medium text-gray-800">{{ constituency.current_mla or "—" }}</span>
-    {% if constituency.current_party_rel %}
-      <span class="ml-1 px-1.5 py-0.5 rounded text-xs font-medium text-white"
-            style="background: {{ constituency.current_party_rel.color_hex }}">
-        {{ constituency.current_party_rel.abbreviation }}
-      </span>
-    {% endif %}
-  </p>
-  {% endif %}
 </div>
 
 {% if constituency.writeup %}
-<div class="mb-8 p-4 bg-white rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed max-w-2xl prose prose-sm prose-red max-w-none">
+<div class="markdown-content mb-8 p-4 bg-white rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed max-w-2xl">
   {{ constituency.writeup|markdown }}
 </div>
 {% endif %}

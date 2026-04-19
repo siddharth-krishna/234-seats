@@ -36,8 +36,8 @@ class Party(Base):
 class Constituency(Base):
     """A single assembly constituency within an election.
 
-    Stores static details (name, district, current MLA) as well as the
-    writeup and whether predictions are currently open.
+    Stores static details (name, district) as well as the writeup and
+    whether predictions are currently open.
     """
 
     __tablename__ = "constituencies"
@@ -49,7 +49,6 @@ class Constituency(Base):
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     district: Mapped[str] = mapped_column(String(200), nullable=False)
     population: Mapped[int | None] = mapped_column(Integer)
-    current_mla: Mapped[str | None] = mapped_column(String(200))
     current_party_id: Mapped[int | None] = mapped_column(ForeignKey("parties.id"))
     writeup: Mapped[str | None] = mapped_column(Text)
     image_url: Mapped[str | None] = mapped_column(String(500))
