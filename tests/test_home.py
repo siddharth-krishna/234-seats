@@ -85,3 +85,58 @@ def test_home_page_constituencies_table_sorts_by_predicted(
     beta_index = response.text.index("Beta")
     assert beta_index < alpha_index
     assert "Winner (DMK)" in response.text
+
+
+def test_home_page_constituencies_default_sort_prioritizes_actionable_seats(
+    client: TestClient, user: User, election: Election, db: Session
+) -> None:
+    """Default constituency sort shows open unpredicted seats first."""
+    open_predicted = Constituency(
+        election_id=election.id,
+        number=1,
+        name="Beta Open Predicted",
+        district="D1",
+        predictions_open=True,
+    )
+    closed_unpredicted = Constituency(
+        election_id=election.id,
+        number=2,
+        name="Alpha Closed Unpredicted",
+        district="D2",
+        predictions_open=False,
+    )
+    open_unpredicted_b = Constituency(
+        election_id=election.id,
+        number=3,
+        name="Zeta Open Unpredicted",
+        district="D3",
+        predictions_open=True,
+    )
+    open_unpredicted_a = Constituency(
+        election_id=election.id,
+        number=4,
+        name="Alpha Open Unpredicted",
+        district="D4",
+        predictions_open=True,
+    )
+    db.add_all([open_predicted, closed_unpredicted, open_unpredicted_b, open_unpredicted_a])
+    db.flush()
+    db.add(
+        Prediction(
+            user_id=user.id,
+            constituency_id=open_predicted.id,
+            predicted_winner="Someone",
+        )
+    )
+    db.commit()
+    logged_in_client(client, user)
+
+    response = client.get("/")
+
+    assert response.text.index("Alpha Open Unpredicted") < response.text.index(
+        "Zeta Open Unpredicted"
+    )
+    assert response.text.index("Zeta Open Unpredicted") < response.text.index("Beta Open Predicted")
+    assert response.text.index("Beta Open Predicted") < response.text.index(
+        "Alpha Closed Unpredicted"
+    )

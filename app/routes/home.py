@@ -17,14 +17,21 @@ router = APIRouter()
 
 THEME_COOKIE_NAME = "theme"
 THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+DEFAULT_SEAT_SORT = "actionable"
 
 
 def _constituency_sort_key(
     constituency: Constituency,
     predicted_ids: set[int],
     sort_by: str,
-) -> str | int:
+) -> str | int | tuple[int, int, str]:
     """Return the sort key for a constituency row."""
+    if sort_by == DEFAULT_SEAT_SORT:
+        return (
+            0 if constituency.predictions_open else 1,
+            0 if constituency.id not in predicted_ids else 1,
+            constituency.name.lower(),
+        )
     if sort_by == "district":
         return constituency.district.lower()
     if sort_by == "status":
@@ -63,7 +70,7 @@ def home(
     request: Request,
     sort: str = Query(default="correct_seats"),
     dir: str = Query(default="desc"),
-    seat_sort: str = Query(default="name"),
+    seat_sort: str = Query(default=DEFAULT_SEAT_SORT),
     seat_dir: str = Query(default="asc"),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_login),
