@@ -145,6 +145,7 @@ def test_constituency_page_shows_table_after_submission(
     r = client.get(f"/seat/{open_seat.id}")
     assert "Alice pick" in r.text
     assert "Bob pick" in r.text
+    assert 'class="bg-red-800 text-white"' in r.text
 
 
 def test_constituency_page_shows_all_when_closed(

@@ -21,3 +21,12 @@ def test_theme_toggle_sets_light_cookie_when_current_is_dark() -> None:
     response = client.post("/theme", data={"next": "/"})
     assert response.status_code == 302
     assert response.cookies.get("theme") == "light"
+
+
+def test_dark_theme_red_highlight_surfaces_use_dark_background() -> None:
+    """Dark mode remaps pale red highlight surfaces to dark red."""
+    client = TestClient(app)
+    response = client.get("/login")
+    assert response.status_code == 200
+    assert "body.theme-dark .bg-red-50" in response.text
+    assert "background-color: rgb(153 27 27 / var(--tw-bg-opacity, 1))" in response.text

@@ -111,17 +111,17 @@
       {% for p in predictions %}
       {% set is_me = p.user_id == current_user.id %}
       {% set correct = constituency.result and p.predicted_winner.strip().lower() == constituency.result.winner_name.strip().lower() %}
-      <tr class="{{ 'bg-red-50' if is_me else 'hover:bg-gray-50' }}">
-        <td class="px-4 py-3 font-medium text-gray-900">
-          {{ p.user.username }}{% if is_me %} <span class="text-xs text-red-400">(you)</span>{% endif %}
+      <tr class="{{ 'bg-red-800 text-white' if is_me else 'hover:bg-gray-50' }}">
+        <td class="px-4 py-3 font-medium {{ 'text-white' if is_me else 'text-gray-900' }}">
+          {{ p.user.username }}{% if is_me %} <span class="text-xs text-red-100">(you)</span>{% endif %}
         </td>
-        <td class="px-4 py-3 text-gray-800">{{ p.predicted_winner }}</td>
-        <td class="px-4 py-3 text-right text-gray-600">
+        <td class="px-4 py-3 {{ 'text-red-50' if is_me else 'text-gray-800' }}">{{ p.predicted_winner }}</td>
+        <td class="px-4 py-3 text-right {{ 'text-red-100' if is_me else 'text-gray-600' }}">
           {{ "%.1f%%"|format(p.predicted_vote_share) if p.predicted_vote_share is not none else "—" }}
         </td>
-        <td class="px-4 py-3 text-gray-500 italic">{{ p.comment or "" }}</td>
+        <td class="px-4 py-3 {{ 'text-red-100' if is_me else 'text-gray-500' }} italic">{{ p.comment or "" }}</td>
         {% if constituency.result %}
-        <td class="px-4 py-3 text-center font-bold {{ 'text-green-600' if correct else 'text-red-400' }}">
+        <td class="px-4 py-3 text-center font-bold {{ 'text-green-200' if is_me and correct else 'text-red-100' if is_me else 'text-green-600' if correct else 'text-red-400' }}">
           {{ "✓" if correct else "✗" }}
         </td>
         {% endif %}
