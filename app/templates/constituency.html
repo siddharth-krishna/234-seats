@@ -25,6 +25,12 @@
 
 </div>
 
+{% if show_predictions %}
+<div class="mb-10">
+  {% include "_predictions_section.html" %}
+</div>
+{% endif %}
+
 {% if constituency.writeup %}
 <div class="markdown-content mb-8 p-4 bg-white rounded-xl border border-gray-200 text-sm text-gray-700 leading-relaxed max-w-2xl">
   {{ constituency.writeup|markdown }}
@@ -41,6 +47,10 @@
 </div>
 {% endif %}
 
-{% include "_predictions_section.html" %}
+{% if constituency.predictions_open and not user_prediction %}
+<div class="mt-8">
+  {% include "_predictions_section.html" %}
+</div>
+{% endif %}
 
 {% endblock %}

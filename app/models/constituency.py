@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from app.models.candidate import Candidate
     from app.models.election import Election
     from app.models.prediction import Prediction
-    from app.models.result import Result
+    from app.models.result import ProvisionalResultSeat, Result
 
 
 class Party(Base):
@@ -61,6 +61,9 @@ class Constituency(Base):
     )
     result: Mapped[Result | None] = relationship(
         back_populates="constituency", uselist=False, cascade="all, delete-orphan"
+    )
+    provisional_result_seats: Mapped[list[ProvisionalResultSeat]] = relationship(
+        back_populates="constituency", cascade="all, delete-orphan"
     )
     candidates: Mapped[list[Candidate]] = relationship(
         back_populates="constituency", cascade="all, delete-orphan", order_by="Candidate.name"

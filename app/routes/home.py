@@ -10,6 +10,10 @@ from app.models.constituency import Constituency
 from app.models.election import Election
 from app.models.prediction import Prediction
 from app.models.user import User
+from app.services.provisional_results import (
+    get_latest_provisional_results_by_constituency,
+    provisional_winner,
+)
 from app.services.scoring import SORT_KEYS, compute_scores, sort_scores
 from app.templates_config import templates
 
@@ -23,6 +27,7 @@ DEFAULT_SEAT_SORT = "actionable"
 def _constituency_sort_key(
     constituency: Constituency,
     predicted_ids: set[int],
+    result_display: dict[int, dict[str, str | bool]],
     sort_by: str,
 ) -> str | int | tuple[int, int, str]:
     """Return the sort key for a constituency row."""
@@ -39,11 +44,10 @@ def _constituency_sort_key(
     if sort_by == "predicted":
         return 0 if constituency.id in predicted_ids else 1
     if sort_by == "result":
-        if constituency.result is None:
+        result = result_display.get(constituency.id)
+        if result is None:
             return "zzz"
-        return (
-            f"{constituency.result.winner_name.lower()}|{constituency.result.winner_party.lower()}"
-        )
+        return str(result["label"]).lower()
     return constituency.name.lower()
 
 
@@ -91,6 +95,33 @@ def home(
             .all()
         )
 
+    provisional_results = (
+        get_latest_provisional_results_by_constituency(db, election.id)
+        if election is not None
+        else {}
+    )
+    result_display: dict[int, dict[str, str | bool]] = {}
+    for constituency in constituencies:
+        provisional_result = provisional_results.get(constituency.id)
+        provisional_leader = (
+            provisional_winner(provisional_result) if provisional_result is not None else None
+        )
+        if provisional_leader is not None:
+            party_label = (
+                provisional_leader.party.abbreviation if provisional_leader.party else "Independent"
+            )
+            result_display[constituency.id] = {
+                "label": f"{provisional_leader.candidate_name} ({party_label})",
+                "provisional": True,
+            }
+        elif constituency.result is not None:
+            result_display[constituency.id] = {
+                "label": (
+                    f"{constituency.result.winner_name} " f"({constituency.result.winner_party})"
+                ),
+                "provisional": False,
+            }
+
     open_seats_count = sum(1 for c in constituencies if c.predictions_open)
 
     # Set of constituency numbers the current user has already predicted on
@@ -110,7 +141,10 @@ def home(
     seat_descending = seat_dir == "desc"
     sorted_constituencies = sorted(
         constituencies,
-        key=lambda c: (_constituency_sort_key(c, predicted_ids, seat_sort), c.name.lower()),
+        key=lambda c: (
+            _constituency_sort_key(c, predicted_ids, result_display, seat_sort),
+            c.name.lower(),
+        ),
         reverse=seat_descending,
     )
 
@@ -121,7 +155,7 @@ def home(
             "name": c.name,
             "open": c.predictions_open,
             "predicted": c.number in predicted_numbers,
-            "result": c.result is not None,
+            "result": c.id in result_display,
         }
         for c in constituencies
     }
@@ -136,6 +170,7 @@ def home(
             "constituencies": sorted_constituencies,
             "open_seats_count": open_seats_count,
             "map_data": map_data,
+            "result_display": result_display,
             "sort": sort,
             "dir": dir,
             "seat_sort": seat_sort,

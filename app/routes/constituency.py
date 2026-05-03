@@ -10,6 +10,10 @@ from app.models.candidate import Candidate
 from app.models.constituency import Constituency
 from app.models.prediction import Prediction
 from app.models.user import User
+from app.services.provisional_results import (
+    get_latest_provisional_result_for_constituency,
+    provisional_winner,
+)
 from app.templates_config import templates
 
 router = APIRouter()
@@ -50,6 +54,12 @@ def _build_context(
         .order_by(Candidate.name)
         .all()
     )
+    latest_provisional_result = get_latest_provisional_result_for_constituency(db, constituency.id)
+    provisional_leader = (
+        provisional_winner(latest_provisional_result)
+        if latest_provisional_result is not None
+        else None
+    )
     return {
         "current_user": current_user,
         "constituency": constituency,
@@ -57,6 +67,8 @@ def _build_context(
         "show_predictions": show_predictions,
         "predictions": all_predictions,
         "candidates": candidates,
+        "latest_provisional_result": latest_provisional_result,
+        "provisional_leader": provisional_leader,
     }
 
 
@@ -116,9 +128,11 @@ def submit_prediction(
     db.commit()
     db.refresh(prediction)
 
-    # HTMX request: return just the predictions section partial
+    # HTMX request: reload so the result/prediction tables move above the writeup.
     if request.headers.get("HX-Request"):
-        ctx = _build_context(constituency, current_user, db)
-        return templates.TemplateResponse(request, "_predictions_section.html", ctx)
+        return Response(
+            status_code=status.HTTP_204_NO_CONTENT,
+            headers={"HX-Redirect": f"/seat/{constituency_id}"},
+        )
 
     return RedirectResponse(url=f"/seat/{constituency_id}", status_code=status.HTTP_302_FOUND)

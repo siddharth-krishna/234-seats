@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 
 from app.models.constituency import Constituency
 from app.models.prediction import Prediction
+from app.models.result import ProvisionalResultSeat
 from app.models.user import User
+from app.services.provisional_results import (
+    get_latest_provisional_results_by_constituency,
+    provisional_winner,
+)
 
 
 @dataclass
@@ -23,6 +28,14 @@ class UserScore:
     vote_share_rmse: float | None  # root mean square error, or None if no data yet
 
 
+@dataclass(frozen=True)
+class EffectiveResult:
+    """Result data used for scoring, official or latest provisional."""
+
+    winner_name: str
+    winner_vote_share: float | None
+
+
 def compute_scores(db: Session, election_id: int) -> list[UserScore]:
     """Return a UserScore for every user, for the given election.
 
@@ -30,10 +43,16 @@ def compute_scores(db: Session, election_id: int) -> list[UserScore]:
     on the leaderboard from the start.
     """
     users = db.query(User).order_by(User.username).all()
-    return [_score_user(db, user, election_id) for user in users]
+    provisional_results = get_latest_provisional_results_by_constituency(db, election_id)
+    return [_score_user(db, user, election_id, provisional_results) for user in users]
 
 
-def _score_user(db: Session, user: User, election_id: int) -> UserScore:
+def _score_user(
+    db: Session,
+    user: User,
+    election_id: int,
+    provisional_results: dict[int, ProvisionalResultSeat],
+) -> UserScore:
     """Compute the score for a single user."""
     predictions = (
         db.query(Prediction)
@@ -47,7 +66,10 @@ def _score_user(db: Session, user: User, election_id: int) -> UserScore:
     errors: list[float] = []
 
     for pred in predictions:
-        result = pred.constituency.result
+        result = _effective_result(
+            pred.constituency,
+            provisional_results.get(pred.constituency_id),
+        )
         if result is None:
             continue
         seats_with_results += 1
@@ -67,6 +89,28 @@ def _score_user(db: Session, user: User, election_id: int) -> UserScore:
         seats_with_results=seats_with_results,
         vote_share_mae=round(mae, 2) if mae is not None else None,
         vote_share_rmse=round(rmse, 2) if rmse is not None else None,
+    )
+
+
+def _effective_result(
+    constituency: Constituency,
+    provisional_result: ProvisionalResultSeat | None,
+) -> EffectiveResult | None:
+    """Return the latest provisional result for scoring, falling back to official."""
+    if provisional_result is not None:
+        winner = provisional_winner(provisional_result)
+        if winner is None:
+            return None
+        return EffectiveResult(
+            winner_name=winner.candidate_name,
+            winner_vote_share=winner.vote_share,
+        )
+
+    if constituency.result is None:
+        return None
+    return EffectiveResult(
+        winner_name=constituency.result.winner_name,
+        winner_vote_share=constituency.result.winner_vote_share,
     )
 
 

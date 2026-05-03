@@ -12,6 +12,7 @@ from app.database import Base
 
 if TYPE_CHECKING:
     from app.models.constituency import Constituency
+    from app.models.result import ProvisionalResultSet
 
 
 class Election(Base):
@@ -33,6 +34,9 @@ class Election(Base):
     )
 
     constituencies: Mapped[list[Constituency]] = relationship(
+        back_populates="election", cascade="all, delete-orphan"
+    )
+    provisional_result_sets: Mapped[list[ProvisionalResultSet]] = relationship(
         back_populates="election", cascade="all, delete-orphan"
     )
 

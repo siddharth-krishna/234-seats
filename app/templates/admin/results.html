@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Results — 234 Seats{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Admin</h1>
+  <div class="flex items-center gap-4">
+    <a href="/admin"
+       class="rounded-md px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-100">Seats</a>
+    <a href="/admin/results"
+       class="rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700">Results</a>
+    <a href="/admin/parties" class="text-sm text-indigo-600 hover:underline">Parties</a>
+    <a href="/" class="text-sm text-gray-400 hover:underline">← Home</a>
+  </div>
+</div>
+
+<section>
+  <div class="mb-4 flex items-center justify-between gap-4">
+    <div>
+      <h2 class="text-base font-semibold">Provisional results</h2>
+      {% if active_election %}
+        <p class="mt-1 text-sm text-gray-500">{{ active_election.name }}</p>
+      {% endif %}
+    </div>
+    {% if active_election %}
+      <a href="/admin/results/new"
+         class="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">
+        Add result set
+      </a>
+    {% endif %}
+  </div>
+
+  {% if not active_election %}
+    <p class="text-sm text-gray-400">No active election. Set one up before entering results.</p>
+  {% elif result_sets %}
+    <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-4 py-3 text-left">Counted up to</th>
+            <th class="px-4 py-3 text-right">Seats</th>
+            <th class="px-4 py-3 text-right">Candidate rows</th>
+            <th class="px-4 py-3 text-left">Entered</th>
+            <th class="px-4 py-3 text-left">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {% for result_set in result_sets %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 font-medium text-gray-900">
+                {{ result_set.counted_at.strftime("%Y-%m-%d %H:%M") }}
+              </td>
+              <td class="px-4 py-3 text-right tabular-nums text-gray-700">
+                {{ result_set.seat_results | length }}
+              </td>
+              <td class="px-4 py-3 text-right tabular-nums text-gray-700">
+                {{ result_set.seat_results | map(attribute="candidate_results") | map("length") | sum }}
+              </td>
+              <td class="px-4 py-3 text-gray-500">
+                {{ result_set.created_at.strftime("%Y-%m-%d %H:%M") }}
+              </td>
+              <td class="px-4 py-3">
+                <a href="/admin/results/{{ result_set.id }}/edit"
+                   class="text-red-600 hover:text-red-700 hover:underline">Edit</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">
+      No provisional result sets yet.
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

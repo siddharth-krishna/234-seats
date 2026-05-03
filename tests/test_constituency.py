@@ -1,5 +1,7 @@
 """Tests for constituency page and prediction submission."""
 
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -7,7 +9,12 @@ from sqlalchemy.orm import Session
 from app.models.constituency import Constituency
 from app.models.election import Election
 from app.models.prediction import Prediction
-from app.models.result import Result
+from app.models.result import (
+    ProvisionalResultCandidate,
+    ProvisionalResultSeat,
+    ProvisionalResultSet,
+    Result,
+)
 from app.models.user import User
 from app.services.auth import create_session_token, hash_password
 
@@ -106,6 +113,45 @@ def test_constituency_page_shows_remote_image(
     logged_in_client(client, user)
     r = client.get(f"/seat/{open_seat.id}")
     assert 'src="https://example.com/seat.jpg"' in r.text
+
+
+def test_prediction_form_stays_below_writeup_before_submission(
+    client: TestClient, user: User, open_seat: Constituency, db: Session
+) -> None:
+    """Open seats show the submission form below writeup content."""
+    open_seat.writeup = "Seat context"
+    db.commit()
+    logged_in_client(client, user)
+
+    r = client.get(f"/seat/{open_seat.id}")
+
+    assert r.text.index("Seat context") < r.text.index("Submit your prediction")
+
+
+def test_results_and_predictions_move_above_writeup_after_submission(
+    client: TestClient, user: User, open_seat: Constituency, db: Session
+) -> None:
+    """After predicting, provisional results and predictions appear above writeup."""
+    open_seat.writeup = "Seat context"
+    db.add(Prediction(user_id=user.id, constituency_id=open_seat.id, predicted_winner="Alice"))
+    result_set = ProvisionalResultSet(
+        election_id=open_seat.election_id, counted_at=datetime(2026, 5, 4, 13, 0)
+    )
+    db.add(result_set)
+    db.flush()
+    result_set.seat_results.append(
+        ProvisionalResultSeat(
+            constituency_id=open_seat.id,
+            candidate_results=[ProvisionalResultCandidate(candidate_name="Alice", vote_share=48.0)],
+        )
+    )
+    db.commit()
+    logged_in_client(client, user)
+
+    r = client.get(f"/seat/{open_seat.id}")
+
+    assert r.text.index("Provisional result") < r.text.index("All predictions")
+    assert r.text.index("All predictions") < r.text.index("Seat context")
 
 
 def test_constituency_page_hides_others_before_submission(

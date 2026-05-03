@@ -69,6 +69,8 @@ python -m pytest -k "test_login"       # run tests matching a pattern
 
 **Always run tests after making code changes.** All 70 tests must pass before committing.
 **Always run pre-commit after making code changes and before finishing the task.**
+If you create new files, stage those specific files with `git add` before running
+pre-commit so hooks check them too. Do not stage unrelated untracked files.
 
 ## Other Dev Commands
 
