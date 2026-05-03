@@ -137,6 +137,15 @@ def update_provisional_result_set(
     return result_set
 
 
+def delete_provisional_result_set(
+    db: Session,
+    result_set: ProvisionalResultSet,
+) -> None:
+    """Delete a provisional result set and its dependent seat rows."""
+    db.delete(result_set)
+    db.commit()
+
+
 def _build_seat_results(
     form: Mapping[str, object],
     constituencies: list[Constituency],

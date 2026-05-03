@@ -135,6 +135,7 @@ def test_create_provisional_result_set(
     )
 
     assert response.status_code == 302
+    assert response.headers["location"] == "/admin/results"
     result_set = db.query(ProvisionalResultSet).one()
     assert result_set.counted_at == datetime(2026, 5, 4, 11, 30)
     assert len(result_set.seat_results) == 1
@@ -226,6 +227,7 @@ def test_update_provisional_result_set(
     )
 
     assert response.status_code == 302
+    assert response.headers["location"] == "/admin/results"
     db.refresh(result_set)
     assert result_set.counted_at == datetime(2026, 5, 4, 12, 30)
     assert result_set.seat_results[0].votes_counted == 15000
@@ -234,6 +236,33 @@ def test_update_provisional_result_set(
         for candidate_result in result_set.seat_results[0].candidate_results
     }
     assert shares == {"Alice": 44.0, "Bob": 50.0}
+
+
+def test_delete_provisional_result_set(
+    client: TestClient,
+    admin: User,
+    election: Election,
+    seat: Constituency,
+    db: Session,
+) -> None:
+    """Admin can delete a provisional result set from the results page."""
+    candidates = db.query(Candidate).order_by(Candidate.name).all()
+    result_set = ProvisionalResultSet(
+        election_id=election.id, counted_at=datetime(2026, 5, 4, 10, 0)
+    )
+    db.add(result_set)
+    db.flush()
+    result_set.seat_results.append(
+        _seat_result(seat.id, [(candidates[0], 51.0), (candidates[1], 45.0)])
+    )
+    db.commit()
+    auth(client, admin)
+
+    response = client.post(f"/admin/results/{result_set.id}/delete")
+
+    assert response.status_code == 302
+    assert response.headers["location"] == "/admin/results"
+    assert db.query(ProvisionalResultSet).count() == 0
 
 
 def test_scoring_uses_latest_provisional_winner(

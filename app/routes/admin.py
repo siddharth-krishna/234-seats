@@ -18,6 +18,7 @@ from app.services.provisional_results import (
     create_provisional_result_set,
     datetime_local_value,
     default_counted_at,
+    delete_provisional_result_set,
     get_result_form_constituencies,
     update_provisional_result_set,
 )
@@ -147,7 +148,7 @@ async def create_provisional_results(
     constituencies = get_result_form_constituencies(db, election.id)
     form = await request.form()
     try:
-        result_set = create_provisional_result_set(db, election, form, constituencies)
+        create_provisional_result_set(db, election, form, constituencies)
     except ProvisionalResultValidationError as exc:
         db.rollback()
         return templates.TemplateResponse(
@@ -165,7 +166,7 @@ async def create_provisional_results(
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     return RedirectResponse(
-        url=f"/admin/results/{result_set.id}/edit",
+        url="/admin/results",
         status_code=status.HTTP_302_FOUND,
     )
 
@@ -239,9 +240,21 @@ async def update_provisional_results(
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     return RedirectResponse(
-        url=f"/admin/results/{result_set.id}/edit",
+        url="/admin/results",
         status_code=status.HTTP_302_FOUND,
     )
+
+
+@router.post("/results/{result_set_id}/delete")
+def delete_provisional_results(
+    result_set_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> RedirectResponse:
+    """Delete a provisional result set."""
+    result_set = _get_provisional_result_set_or_404(db, result_set_id)
+    delete_provisional_result_set(db, result_set)
+    return RedirectResponse(url="/admin/results", status_code=status.HTTP_302_FOUND)
 
 
 # ── Per-seat management page ───────────────────────────────────────────────────
