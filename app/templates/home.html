@@ -164,14 +164,19 @@
           </td>
           <td class="px-4 py-3 text-center">
             <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold
-              {{ 'bg-red-50 text-red-700' if map_data[c.number].predicted else 'bg-gray-100 text-gray-400' }}">
-              {{ "Yes" if map_data[c.number].predicted else "No" }}
+              {{ 'bg-red-50 text-red-700' if seat_display[c.id].predicted_label else 'bg-gray-100 text-gray-400' }}">
+              {{ seat_display[c.id].predicted_label if seat_display[c.id].predicted_label else "No" }}
             </span>
           </td>
           <td class="px-4 py-3 text-gray-700">
-            {% if result_display.get(c.id) %}
-              {{ result_display[c.id].label }}
-              {% if result_display[c.id].provisional %}
+            {% if seat_display[c.id].result_label %}
+              {% if seat_display[c.id].result_matches_prediction %}
+                <span class="mr-1 font-semibold text-green-600">✓</span>
+              {% elif seat_display[c.id].predicted_label %}
+                <span class="mr-1 font-semibold text-red-600">✗</span>
+              {% endif %}
+              {{ seat_display[c.id].result_label }}
+              {% if seat_display[c.id].result_provisional %}
                 <span class="ml-1 text-xs text-gray-400">provisional</span>
               {% endif %}
             {% else %}

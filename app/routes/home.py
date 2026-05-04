@@ -2,10 +2,11 @@
 
 from fastapi import APIRouter, Cookie, Depends, Form, Query, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.dependencies import require_login
+from app.models.candidate import Candidate
 from app.models.constituency import Constituency
 from app.models.election import Election
 from app.models.prediction import Prediction
@@ -22,6 +23,38 @@ router = APIRouter()
 THEME_COOKIE_NAME = "theme"
 THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 DEFAULT_SEAT_SORT = "actionable"
+
+
+def _candidate_display_label(candidate: Candidate) -> str:
+    """Return the display label for a candidate."""
+    party_label = candidate.party.abbreviation if candidate.party else "Independent"
+    return f"{candidate.name} ({party_label})"
+
+
+def _predicted_candidate_label(
+    constituency: Constituency,
+    prediction: Prediction | None,
+) -> str | None:
+    """Return the current user's predicted candidate label for a constituency."""
+    if prediction is None:
+        return None
+
+    predicted_winner = prediction.predicted_winner.strip()
+    predicted_key = predicted_winner.lower()
+    for candidate in constituency.candidates:
+        if candidate.name.strip().lower() == predicted_key:
+            return _candidate_display_label(candidate)
+    return predicted_winner
+
+
+def _prediction_matches_result(
+    prediction: Prediction | None,
+    winner_name: str | None,
+) -> bool:
+    """Return whether the prediction matches the declared winner."""
+    if prediction is None or winner_name is None:
+        return False
+    return prediction.predicted_winner.strip().lower() == winner_name.strip().lower()
 
 
 def _constituency_sort_key(
@@ -90,6 +123,7 @@ def home(
         scores = sort_scores(compute_scores(db, election.id), sort_by=sort, descending=descending)
         constituencies = (
             db.query(Constituency)
+            .options(selectinload(Constituency.candidates).selectinload(Candidate.party))
             .filter_by(election_id=election.id)
             .order_by(Constituency.number)
             .all()
@@ -113,6 +147,7 @@ def home(
             result_display[constituency.id] = {
                 "label": f"{provisional_leader.candidate_name} ({party_label})",
                 "provisional": True,
+                "winner_name": provisional_leader.candidate_name,
             }
         elif constituency.result is not None:
             result_display[constituency.id] = {
@@ -120,6 +155,7 @@ def home(
                     f"{constituency.result.winner_name} ({constituency.result.winner_party})"
                 ),
                 "provisional": False,
+                "winner_name": constituency.result.winner_name,
             }
 
     open_seats_count = sum(1 for c in constituencies if c.predictions_open)
@@ -127,6 +163,7 @@ def home(
     # Set of constituency numbers the current user has already predicted on
     predicted_numbers: set[int] = set()
     predicted_ids: set[int] = set()
+    predictions_by_constituency_id: dict[int, Prediction] = {}
     if election is not None:
         user_predictions = (
             db.query(Prediction)
@@ -137,6 +174,21 @@ def home(
         )
         predicted_numbers = {p.constituency.number for p in user_predictions}
         predicted_ids = {p.constituency_id for p in user_predictions}
+        predictions_by_constituency_id = {p.constituency_id: p for p in user_predictions}
+
+    seat_display: dict[int, dict[str, str | bool | None]] = {}
+    for constituency in constituencies:
+        prediction = predictions_by_constituency_id.get(constituency.id)
+        result = result_display.get(constituency.id)
+        seat_display[constituency.id] = {
+            "predicted_label": _predicted_candidate_label(constituency, prediction),
+            "result_label": result["label"] if result is not None else None,
+            "result_provisional": bool(result["provisional"]) if result is not None else False,
+            "result_matches_prediction": _prediction_matches_result(
+                prediction,
+                str(result["winner_name"]) if result is not None else None,
+            ),
+        }
 
     seat_descending = seat_dir == "desc"
     sorted_constituencies = sorted(
@@ -170,6 +222,7 @@ def home(
             "constituencies": sorted_constituencies,
             "open_seats_count": open_seats_count,
             "map_data": map_data,
+            "seat_display": seat_display,
             "result_display": result_display,
             "sort": sort,
             "dir": dir,

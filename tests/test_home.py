@@ -4,7 +4,8 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models.constituency import Constituency
+from app.models.candidate import Candidate
+from app.models.constituency import Constituency, Party
 from app.models.election import Election
 from app.models.prediction import Prediction
 from app.models.result import Result
@@ -85,6 +86,64 @@ def test_home_page_constituencies_table_sorts_by_predicted(
     beta_index = response.text.index("Beta")
     assert beta_index < alpha_index
     assert "Winner (DMK)" in response.text
+
+
+def test_home_page_shows_prediction_label_and_result_match_marker(
+    client: TestClient, user: User, election: Election, db: Session
+) -> None:
+    """Home page shows predicted candidates and marks matching results."""
+    party = Party(name="DMK", abbreviation="DMK", alliance="SPA", color_hex="#e63946")
+    seat_correct = Constituency(
+        election_id=election.id,
+        number=1,
+        name="Correct Seat",
+        district="D1",
+        predictions_open=True,
+    )
+    seat_wrong = Constituency(
+        election_id=election.id,
+        number=2,
+        name="Wrong Seat",
+        district="D2",
+        predictions_open=False,
+    )
+    db.add_all([party, seat_correct, seat_wrong])
+    db.flush()
+    db.add_all(
+        [
+            Candidate(constituency_id=seat_correct.id, name="Alice Kumar", party_id=party.id),
+            Candidate(constituency_id=seat_wrong.id, name="Charlie Rao", party_id=party.id),
+            Prediction(
+                user_id=user.id,
+                constituency_id=seat_correct.id,
+                predicted_winner="Alice Kumar",
+            ),
+            Prediction(
+                user_id=user.id,
+                constituency_id=seat_wrong.id,
+                predicted_winner="Charlie Rao",
+            ),
+            Result(
+                constituency_id=seat_correct.id,
+                winner_name="Alice Kumar",
+                winner_party="DMK",
+            ),
+            Result(
+                constituency_id=seat_wrong.id,
+                winner_name="Bob",
+                winner_party="AIADMK",
+            ),
+        ]
+    )
+    db.commit()
+    logged_in_client(client, user)
+
+    response = client.get("/")
+
+    assert "Alice Kumar (DMK)" in response.text
+    assert "Charlie Rao (DMK)" in response.text
+    assert "✓" in response.text
+    assert "✗" in response.text
 
 
 def test_home_page_constituencies_default_sort_prioritizes_actionable_seats(
