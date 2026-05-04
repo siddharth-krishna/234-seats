@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
+from difflib import SequenceMatcher
 from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session, selectinload
@@ -26,6 +29,34 @@ class ProvisionalResultValidationError(ValueError):
     def __init__(self, errors: list[str]) -> None:
         self.errors = errors
         super().__init__("\n".join(errors))
+
+
+@dataclass(frozen=True)
+class ProvisionalCandidateInput:
+    """A candidate row submitted by an external provisional-results source."""
+
+    name: str
+    party: str
+    vote_share: float
+
+
+@dataclass(frozen=True)
+class ProvisionalSeatInput:
+    """A seat row submitted by an external provisional-results source."""
+
+    constituency_number: int
+    candidates: list[ProvisionalCandidateInput]
+    votes_counted: int | None = None
+
+
+@dataclass(frozen=True)
+class ProvisionalApiResult:
+    """Summary of a provisional-results API import."""
+
+    result_set: ProvisionalResultSet
+    seats_imported: int
+    candidates_imported: int
+    unmatched_candidates: list[str]
 
 
 def default_counted_at() -> datetime:
@@ -117,6 +148,97 @@ def create_provisional_result_set(
     db.commit()
     db.refresh(result_set)
     return result_set
+
+
+def create_provisional_result_set_from_api(
+    db: Session,
+    election: Election,
+    counted_at: datetime,
+    seats: list[ProvisionalSeatInput],
+) -> ProvisionalApiResult:
+    """Create a provisional result set from external scraped result rows."""
+    constituencies = get_result_form_constituencies(db, election.id)
+    constituencies_by_number = {
+        constituency.number: constituency for constituency in constituencies
+    }
+    errors: list[str] = []
+    seat_results: list[ProvisionalResultSeat] = []
+    unmatched_candidates: list[str] = []
+    candidates_imported = 0
+
+    for seat in seats:
+        constituency = constituencies_by_number.get(seat.constituency_number)
+        if constituency is None:
+            errors.append(f"Constituency #{seat.constituency_number} is not open for results.")
+            continue
+
+        seat_label = f"{constituency.number}. {constituency.name}"
+        if seat.votes_counted is not None and seat.votes_counted <= 0:
+            errors.append(f"{seat_label}: votes counted must be a positive whole number.")
+
+        candidate_results: list[ProvisionalResultCandidate] = []
+        matched_candidate_ids: set[int] = set()
+        for row in seat.candidates:
+            if row.vote_share < 0 or row.vote_share > 100:
+                errors.append(
+                    f"{seat_label}: {row.name}'s vote percentage must be between 0 and 100."
+                )
+                continue
+
+            candidate = _match_candidate(constituency, row.name, row.party)
+            if candidate is not None and candidate.id in matched_candidate_ids:
+                candidate = None
+
+            if candidate is None:
+                unmatched_candidates.append(f"{seat_label}: {row.name} ({row.party})")
+                candidate_results.append(
+                    ProvisionalResultCandidate(
+                        candidate_id=None,
+                        candidate_name=row.name,
+                        party_id=_match_party_id(constituency, row.party),
+                        vote_share=row.vote_share,
+                    )
+                )
+            else:
+                matched_candidate_ids.add(candidate.id)
+                candidate_results.append(
+                    ProvisionalResultCandidate(
+                        candidate_id=candidate.id,
+                        candidate_name=candidate.name,
+                        party_id=candidate.party_id,
+                        vote_share=row.vote_share,
+                    )
+                )
+
+        if seat.votes_counted is None and not candidate_results:
+            continue
+
+        candidates_imported += len(candidate_results)
+        seat_results.append(
+            ProvisionalResultSeat(
+                constituency_id=constituency.id,
+                votes_counted=seat.votes_counted,
+                candidate_results=candidate_results,
+            )
+        )
+
+    if errors:
+        raise ProvisionalResultValidationError(errors)
+
+    result_set = ProvisionalResultSet(
+        election_id=election.id,
+        counted_at=counted_at,
+        seat_results=seat_results,
+    )
+    db.add(result_set)
+    db.commit()
+    db.refresh(result_set)
+    return ProvisionalApiResult(
+        result_set=result_set,
+        seats_imported=len(seat_results),
+        candidates_imported=candidates_imported,
+        unmatched_candidates=unmatched_candidates,
+    )
 
 
 def update_provisional_result_set(
@@ -246,3 +368,70 @@ def _parse_optional_int(raw: str, error_message: str, errors: list[str]) -> int 
         errors.append(error_message)
         return None
     return value
+
+
+_NAME_PUNCTUATION = re.compile(r"[^a-z0-9]+")
+
+
+def _normalise_candidate_name(name: str) -> str:
+    """Return a punctuation-insensitive candidate name for ECI matching."""
+    return _NAME_PUNCTUATION.sub("", name.lower())
+
+
+def _normalise_party(party: str) -> str:
+    """Return a comparable party abbreviation/name."""
+    return party.strip().lower().replace(".", "")
+
+
+def _match_party_id(constituency: Constituency, party_name: str) -> int | None:
+    """Return a local party ID matching an external party label in a constituency."""
+    target = _normalise_party(party_name)
+    if not target:
+        return None
+    for candidate in constituency.candidates:
+        party = candidate.party
+        if party is None:
+            continue
+        if target in {_normalise_party(party.name), _normalise_party(party.abbreviation)}:
+            return party.id
+    return None
+
+
+def _match_candidate(
+    constituency: Constituency,
+    external_name: str,
+    external_party: str,
+) -> Candidate | None:
+    """Match an external candidate row to a local candidate for a constituency."""
+    party_matches = [
+        candidate
+        for candidate in constituency.candidates
+        if candidate.party is not None
+        and _normalise_party(external_party)
+        in {
+            _normalise_party(candidate.party.name),
+            _normalise_party(candidate.party.abbreviation),
+        }
+    ]
+    if len(party_matches) == 1:
+        return party_matches[0]
+
+    target = _normalise_candidate_name(external_name)
+    for candidate in constituency.candidates:
+        if _normalise_candidate_name(candidate.name) == target:
+            return candidate
+
+    if not party_matches:
+        return None
+
+    scored = [
+        (
+            SequenceMatcher(None, _normalise_candidate_name(candidate.name), target).ratio(),
+            candidate,
+        )
+        for candidate in party_matches
+    ]
+    if not scored:
+        return None
+    score, candidate = max(scored, key=lambda item: item[0])
+    return candidate if score >= 0.86 else None

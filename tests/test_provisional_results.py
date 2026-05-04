@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.models.candidate import Candidate
 from app.models.constituency import Constituency, Party
 from app.models.election import Election
@@ -141,6 +142,60 @@ def test_create_provisional_result_set(
     assert len(result_set.seat_results) == 1
     assert result_set.seat_results[0].votes_counted == 12345
     assert len(result_set.seat_results[0].candidate_results) == 2
+
+
+def test_api_create_provisional_result_set(
+    client: TestClient,
+    seat: Constituency,
+    db: Session,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Script API can save scraped provisional results with local candidate matching."""
+    monkeypatch.setattr(settings, "provisional_results_api_token", "test-token")
+    db.commit()
+
+    response = client.post(
+        "/api/provisional-results",
+        headers={"X-Provisional-Results-Token": "test-token"},
+        json={
+            "counted_at": "2026-05-04T12:00:00",
+            "seats": [
+                {
+                    "constituency_number": seat.number,
+                    "votes_counted": 10000,
+                    "candidates": [
+                        {"name": "ALICE.", "party": "DMK", "vote_share": 51.2},
+                        {"name": "Bob", "party": "AIADMK", "vote_share": 48.8},
+                    ],
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["seats_imported"] == 1
+    assert response.json()["unmatched_candidates"] == []
+    result_set = db.query(ProvisionalResultSet).one()
+    assert result_set.counted_at == datetime(2026, 5, 4, 12, 0)
+    result = result_set.seat_results[0].candidate_results[0]
+    assert result.candidate_name == "Alice"
+    assert result.candidate_id is not None
+
+
+def test_api_rejects_invalid_token(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Script API requires the configured token."""
+    monkeypatch.setattr(settings, "provisional_results_api_token", "test-token")
+
+    response = client.post(
+        "/api/provisional-results",
+        headers={"X-Provisional-Results-Token": "wrong"},
+        json={"seats": []},
+    )
+
+    assert response.status_code == 403
 
 
 def test_provisional_result_form_only_shows_open_seats(

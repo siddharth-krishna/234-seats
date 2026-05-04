@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.routes import admin as admin_router
+from app.routes import api as api_router
 from app.routes import auth as auth_router
 from app.routes import constituency as constituency_router
 from app.routes import home as home_router
@@ -83,6 +84,7 @@ def create_app() -> FastAPI:
     application.include_router(home_router.router)
     application.include_router(constituency_router.router)
     application.include_router(admin_router.router)
+    application.include_router(api_router.router)
 
     return application
 

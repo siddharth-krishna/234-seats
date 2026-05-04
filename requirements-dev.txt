@@ -9,3 +9,4 @@ pre-commit>=3.7
 pyshp>=2.3           # used by scripts/generate_tn_map.py
 requests>=2.32       # used by scripts/import_candidates.py
 beautifulsoup4>=4.12 # used by scripts/import_candidates.py
+playwright>=1.44     # used by scripts/scrape_eci_provisional_results.py --browser

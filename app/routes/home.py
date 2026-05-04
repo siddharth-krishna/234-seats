@@ -117,7 +117,7 @@ def home(
         elif constituency.result is not None:
             result_display[constituency.id] = {
                 "label": (
-                    f"{constituency.result.winner_name} " f"({constituency.result.winner_party})"
+                    f"{constituency.result.winner_name} ({constituency.result.winner_party})"
                 ),
                 "provisional": False,
             }

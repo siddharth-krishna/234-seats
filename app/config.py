@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     database_url: str = "sqlite:///./234seats.db"
     secret_key: str = "change-me-in-production"
+    provisional_results_api_token: str | None = None
     debug: bool = True
 
 
