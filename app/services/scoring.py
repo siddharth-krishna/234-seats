@@ -73,9 +73,14 @@ def _score_user(
         if result is None:
             continue
         seats_with_results += 1
-        if pred.predicted_winner.strip().lower() == result.winner_name.strip().lower():
+        is_correct = pred.predicted_winner.strip().lower() == result.winner_name.strip().lower()
+        if is_correct:
             correct_seats += 1
-        if pred.predicted_vote_share is not None and result.winner_vote_share is not None:
+        if (
+            is_correct
+            and pred.predicted_vote_share is not None
+            and result.winner_vote_share is not None
+        ):
             errors.append(pred.predicted_vote_share - result.winner_vote_share)
 
     mae = sum(abs(e) for e in errors) / len(errors) if errors else None
@@ -140,6 +145,19 @@ def sort_scores(
 
     if sort_by == "username":
         return sorted(scores, key=lambda s: s.username.lower(), reverse=descending)
+
+    if sort_by == "correct_seats":
+
+        def key(s: UserScore) -> tuple[int, int, float, str]:
+            mae = s.vote_share_mae if s.vote_share_mae is not None else float("inf")
+            return (
+                -s.correct_seats if descending else s.correct_seats,
+                0 if s.vote_share_mae is not None else 1,
+                mae if not descending else mae,
+                s.username.lower(),
+            )
+
+        return sorted(scores, key=key)
 
     def key(s: UserScore) -> tuple[int, float]:
         val = getattr(s, sort_by)

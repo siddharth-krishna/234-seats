@@ -112,10 +112,12 @@ def test_wrong_prediction_not_counted(
 def test_vote_share_mae_rmse(
     db: Session, election: Election, seats: list[Constituency], users: list[User]
 ) -> None:
-    """MAE and RMSE are computed correctly over multiple results."""
+    """MAE and RMSE are computed from correct-seat predictions only."""
+    # Only the correct predictions count:
     # errors: +2, -4  → MAE = 3.0, RMSE = sqrt((4+16)/2) = sqrt(10)
     add_result(db, seats[0], "A", 40.0)
     add_result(db, seats[1], "B", 50.0)
+    add_result(db, seats[2], "C", 60.0)
     db.add_all(
         [
             Prediction(
@@ -130,6 +132,12 @@ def test_vote_share_mae_rmse(
                 predicted_winner="B",
                 predicted_vote_share=46.0,
             ),
+            Prediction(
+                user_id=users[0].id,
+                constituency_id=seats[2].id,
+                predicted_winner="Wrong",
+                predicted_vote_share=99.0,
+            ),
         ]
     )
     db.commit()
@@ -138,6 +146,29 @@ def test_vote_share_mae_rmse(
     s = scores["user1"]
     assert s.vote_share_mae == round(3.0, 2)
     assert s.vote_share_rmse == round(math.sqrt(10), 2)
+
+
+def test_wrong_predictions_do_not_affect_vote_share_error(
+    db: Session, election: Election, seats: list[Constituency], users: list[User]
+) -> None:
+    """Vote-share error ignores seats where the winner prediction is wrong."""
+    add_result(db, seats[0], "Alice", 48.0)
+    db.add(
+        Prediction(
+            user_id=users[0].id,
+            constituency_id=seats[0].id,
+            predicted_winner="Bob",
+            predicted_vote_share=10.0,
+        )
+    )
+    db.commit()
+
+    scores = {s.username: s for s in compute_scores(db, election.id)}
+    s = scores["user1"]
+    assert s.correct_seats == 0
+    assert s.seats_with_results == 1
+    assert s.vote_share_mae is None
+    assert s.vote_share_rmse is None
 
 
 def test_no_result_does_not_count(
@@ -182,11 +213,12 @@ def test_case_insensitive_winner_match(
 
 
 def test_sort_by_correct_seats_desc() -> None:
-    """sort_scores orders by correct_seats descending by default."""
-    s1 = UserScore(1, "alice", 3, 2, 2, 1.0, 1.0)
-    s2 = UserScore(2, "bob", 3, 5, 5, 2.0, 2.0)
-    result = sort_scores([s1, s2], sort_by="correct_seats", descending=True)
-    assert result[0].username == "bob"
+    """sort_scores breaks correct_seats ties by lower MAE first."""
+    s1 = UserScore(1, "alice", 3, 5, 5, 2.0, 2.0)
+    s2 = UserScore(2, "bob", 3, 5, 5, 1.0, 1.0)
+    s3 = UserScore(3, "charlie", 3, 4, 4, 0.5, 0.5)
+    result = sort_scores([s1, s2, s3], sort_by="correct_seats", descending=True)
+    assert [s.username for s in result] == ["bob", "alice", "charlie"]
 
 
 def test_sort_none_values_last() -> None:
